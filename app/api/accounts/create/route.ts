@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { generateAccountNumber } from '@/lib/utils'
 
-export async function POST(req: Request) {
+export async function POST() {
   const session = await getSession()
   if (!session?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = (session as any).id as string
+  const userId = session.id as string
 
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -39,8 +39,8 @@ export async function POST(req: Request) {
     })
 
     return NextResponse.json({ success: true, account: result })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API create account error:', error)
-    return NextResponse.json({ error: error?.message || 'Server error' }, { status: 500 })
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Server error' }, { status: 500 })
   }
 }

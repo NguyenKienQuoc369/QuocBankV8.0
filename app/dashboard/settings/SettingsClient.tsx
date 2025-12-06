@@ -60,7 +60,7 @@ export default function SettingsClient({ user }: { user: any & { accounts?: { id
             <h3 className="text-lg font-bold text-white mb-4">Tài khoản của bạn</h3>
             <div className="space-y-3">
               {user?.accounts?.length ? (
-                user.accounts.map((acc: any) => (
+                user.accounts.map((acc: { id: string; accountNumber: string; balance: number; isLocked: boolean }) => (
                   <div key={acc.id} className="flex items-center justify-between p-3 bg-white/3 rounded-xl">
                     <div>
                       <div className="text-sm text-gray-300">Số tài khoản</div>
@@ -93,7 +93,7 @@ export default function SettingsClient({ user }: { user: any & { accounts?: { id
                 handleSubmit((data) => {
                   const formData = new FormData()
                   Object.entries(data).forEach(([key, val]) => formData.append(key, String(val)))
-                  formAction(formData)
+                  ;(formAction as unknown as (fd?: FormData) => void)(formData)
                 })(evt)
               }}
               className="space-y-6">

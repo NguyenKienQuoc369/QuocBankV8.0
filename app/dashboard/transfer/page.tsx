@@ -10,8 +10,8 @@ import { WarpSpeed } from '@/components/ui/WarpSpeed';
 
 export default function TransferPage() {
   const [state, formAction, isPending] = useActionState(transferMoney, null);
-  const { register, handleSubmit, reset } = useForm();
   const [showWarp, setShowWarp] = useState(false);
+  const { reset, register } = useForm();
 
   // Kích hoạt Warp Speed khi đang gửi
   useEffect(() => {
@@ -71,22 +71,16 @@ export default function TransferPage() {
           </motion.div>
         ) : (
           // FORM NHẬP LIỆU
-          <form action={formAction} onSubmit={(evt) => {
-              evt.preventDefault();
-              handleSubmit((data) => {
-                  const formData = new FormData();
-                  Object.entries(data).forEach(([key, val]) => formData.append(key, String(val)));
-                  formAction(formData);
-              })(evt);
-          }} className="space-y-6 relative z-10">
+          <form action={formAction} className="space-y-6 relative z-10">
             
             <div className="grid gap-6">
               {/* Người nhận */}
               <div className="space-y-2">
-                <FloatingInput 
-                  label="Tên định danh người nhận (Username)" 
-                  icon={User} 
-                  {...register('toUsername', { required: true })}
+                <FloatingInput
+                  label="Tên định danh người nhận (Username)"
+                  icon={User}
+                  name="toUsername"
+                  required
                   className="!bg-black/20"
                 />
               </div>
@@ -108,8 +102,8 @@ export default function TransferPage() {
 
               {/* Lời nhắn */}
               <div>
-                <textarea 
-                  {...register('message')}
+                <textarea
+                  name="message"
                   placeholder="Thông điệp gửi kèm (Tùy chọn)..."
                   className="w-full h-24 bg-black/20 border border-white/10 rounded-xl p-4 text-white placeholder-gray-600 focus:border-indigo-500 focus:outline-none transition-colors resize-none"
                 />

@@ -1,7 +1,7 @@
 export type QRResult = {
   success: boolean
   qrCode?: string // data URL
-  data?: any
+  data?: unknown
   error?: string
 }
 
@@ -10,8 +10,8 @@ export async function generateStaticQRCode(): Promise<QRResult> {
     const res = await fetch('/api/qr/static', { method: 'POST' })
     if (!res.ok) return { success: false, error: 'Failed' }
     return (await res.json()) as QRResult
-  } catch (e: any) {
-    return { success: false, error: e?.message }
+  } catch (e: unknown) {
+    return { success: false, error: e instanceof Error ? e.message : 'Unknown error' }
   }
 }
 

@@ -26,8 +26,8 @@ export async function POST(req: Request) {
       if (to.isLocked) throw new Error('Recipient account is locked')
       if (from.balance < amount) throw new Error('Insufficient funds')
 
-      await tx.account.update({ where: { id: from.id }, data: { balance: { decrement: amount } as any } })
-      await tx.account.update({ where: { id: to.id }, data: { balance: { increment: amount } as any } })
+      await tx.account.update({ where: { id: from.id }, data: { balance: { decrement: amount } } })
+      await tx.account.update({ where: { id: to.id }, data: { balance: { increment: amount } } })
 
       const txRecord = await tx.transaction.create({
         data: {

@@ -16,7 +16,7 @@ export async function GET(req: Request) {
     const startDate = url.searchParams.get('startDate')
     const endDate = url.searchParams.get('endDate')
 
-    const whereClauses: any = {
+    const whereClauses: Record<string, unknown> = {
       OR: [
         { fromAccount: { userId } },
         { toAccount: { userId } },
@@ -26,9 +26,10 @@ export async function GET(req: Request) {
     if (type) whereClauses.type = type
 
     if (startDate || endDate) {
-      whereClauses.createdAt = {}
-      if (startDate) whereClauses.createdAt.gte = new Date(startDate)
-      if (endDate) whereClauses.createdAt.lte = new Date(endDate)
+      const dateFilter: { gte?: Date; lte?: Date } = {}
+      if (startDate) dateFilter.gte = new Date(startDate)
+      if (endDate) dateFilter.lte = new Date(endDate)
+      whereClauses.createdAt = dateFilter
     }
 
     if (q) {
@@ -60,8 +61,8 @@ export async function GET(req: Request) {
     ])
 
     return NextResponse.json({ success: true, transactions, total, page, pageSize })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API transactions list error:', error)
-    return NextResponse.json({ error: error?.message || 'Server error' }, { status: 500 })
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Server error' }, { status: 500 })
   }
 }
