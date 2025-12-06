@@ -11,7 +11,7 @@ import { WarpSpeed } from '@/components/ui/WarpSpeed';
 export default function TransferPage() {
   const [state, formAction, isPending] = useActionState(transferMoney, null);
   const [showWarp, setShowWarp] = useState(false);
-  const { reset, register } = useForm();
+  const { reset, register, watch } = useForm();
 
   // Kích hoạt Warp Speed khi đang gửi
   useEffect(() => {
@@ -30,6 +30,13 @@ export default function TransferPage() {
   useEffect(() => {
     if (state?.success) reset();
   }, [state?.success, reset]);
+
+  // Tính phí động 0.5% (có thể override bằng NEXT_PUBLIC_TRANSFER_FEE_RATE)
+  const amountRaw = watch('amount');
+  const amount = Number(amountRaw || 0);
+  const FEE_RATE = Number(process.env.NEXT_PUBLIC_TRANSFER_FEE_RATE ?? '0.005');
+  const fee = Math.round(amount * FEE_RATE);
+  const total = amount + fee;
 
   return (
     <div className="max-w-2xl mx-auto py-10 relative">
@@ -98,6 +105,13 @@ export default function TransferPage() {
                     {/* Hiệu ứng glow khi focus vào tiền */}
                     <div className="absolute inset-0 rounded-xl bg-[#00ff88]/5 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none blur-md"></div>
                  </div>
+                 {/* Thông tin phí 0.5% và tổng trừ */}
+                 {amount > 0 && (
+                   <div className="text-sm text-gray-400">
+                     Phí 0.5%: <span className="text-gray-300">{fee.toLocaleString('vi-VN')} VND</span> •
+                     Tổng trừ: <span className="text-gray-300">{total.toLocaleString('vi-VN')} VND</span>
+                   </div>
+                 )}
               </div>
 
               {/* Lời nhắn */}

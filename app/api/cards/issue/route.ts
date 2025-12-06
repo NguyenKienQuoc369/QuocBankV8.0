@@ -30,6 +30,25 @@ export async function POST() {
       return NextResponse.json({ success: false, message: 'Không tìm thấy tài khoản' }, { status: 400 })
     }
 
+    // Rate limit: max N cards per user per day
+    const dailyLimit = Number(process.env.CARD_ISSUE_DAILY_LIMIT ?? '3')
+    const startOfDay = new Date()
+    startOfDay.setHours(0, 0, 0, 0)
+
+    const issuedToday = await prisma.card.count({
+      where: {
+        account: { userId: String(session.id) },
+        createdAt: { gte: startOfDay }
+      }
+    })
+
+    if (issuedToday >= dailyLimit) {
+      return NextResponse.json(
+        { success: false, message: `Đã vượt giới hạn phát hành thẻ trong ngày (${dailyLimit}/ngày). Vui lòng thử lại vào ngày mai.` },
+        { status: 429 }
+      )
+    }
+
     // Create a new virtual card
     const card = await prisma.card.create({
       data: {

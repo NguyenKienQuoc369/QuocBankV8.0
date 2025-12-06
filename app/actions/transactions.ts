@@ -14,7 +14,7 @@ const TransferSchema = z.object({
 
 export async function transferMoney(prevStateOrFormData?: FormData | unknown, formData?: FormData) {
   try {
-    const token = (await cookies()).get('session_token')?.value
+    const token = (await cookies()).get('session')?.value
     if (!token) return { success: false, message: 'Mất kết nối với máy chủ!' }
     
     const payload = await verifyToken(token)
@@ -33,12 +33,20 @@ export async function transferMoney(prevStateOrFormData?: FormData | unknown, fo
     }
 
     const { amount, toUsername, message } = validated.data
+    if (amount <= 0) {
+      return { success: false, message: 'Số tiền phải lớn hơn 0' }
+    }
+
+    const FEE_RATE = Number(process.env.TRANSFER_FEE_RATE ?? '0.005')
+    const fee = Number((amount * FEE_RATE).toFixed(0)) // làm tròn về số nguyên VND
+    const totalDebit = amount + fee
 
     await prisma.$transaction(async (tx) => {
       const senderAccount = await tx.account.findFirst({ where: { userId: senderId }, orderBy: { createdAt: 'asc' } })
 
       if (!senderAccount) throw new Error('Không tìm thấy tài khoản nguồn')
-      if (senderAccount.balance < amount) throw new Error('Năng lượng (Số dư) không đủ để thực hiện cú nhảy này!')
+      if (senderAccount.isLocked) throw new Error('Tài khoản nguồn đang bị khóa')
+      if (senderAccount.balance < totalDebit) throw new Error('Số dư không đủ (đã bao gồm phí)')
 
       const receiverUser = await tx.user.findUnique({ where: { username: toUsername } })
       if (!receiverUser) throw new Error('Không tìm thấy tọa độ người nhận (Username sai)')
@@ -46,14 +54,16 @@ export async function transferMoney(prevStateOrFormData?: FormData | unknown, fo
 
       const receiverAccount = await tx.account.findFirst({ where: { userId: receiverUser.id }, orderBy: { createdAt: 'asc' } })
       if (!receiverAccount) throw new Error('Người nhận chưa có tài khoản')
+      if (receiverAccount.isLocked) throw new Error('Tài khoản người nhận đang bị khóa')
 
-      await tx.account.update({ where: { id: senderAccount.id }, data: { balance: { decrement: amount } } })
+      // Trừ người gửi gồm amount + fee, cộng người nhận amount
+      await tx.account.update({ where: { id: senderAccount.id }, data: { balance: { decrement: totalDebit } } })
       await tx.account.update({ where: { id: receiverAccount.id }, data: { balance: { increment: amount } } })
 
       await tx.transaction.create({
         data: {
           amount,
-          description: message || 'Chuyển khoản liên ngân hà',
+          description: (message || 'Chuyển khoản liên ngân hà') + ` | Phí đã trừ: ${fee.toLocaleString()} VND`,
           status: 'SUCCESS',
           type: 'TRANSFER',
           fromAccountId: senderAccount.id,
@@ -63,7 +73,7 @@ export async function transferMoney(prevStateOrFormData?: FormData | unknown, fo
     })
 
     revalidatePath('/dashboard')
-    return { success: true, message: 'Giao dịch thành công! Năng lượng đã được chuyển đi.' }
+    return { success: true, message: `Giao dịch thành công! Đã chuyển ${amount.toLocaleString()} VND (Phí ${fee.toLocaleString()} VND).` }
 
   } catch (error) {
     console.error('Transfer Error:', error)
