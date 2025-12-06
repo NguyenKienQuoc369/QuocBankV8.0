@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# QuocBank — Ứng dụng ngân hàng mẫu (demo sinh viên)
 
-## Getting Started
+QuocBank là một dự án demo học tập xây dựng bằng Next.js, Prisma và React. Mục tiêu: minh hoạ các chức năng cơ bản của ngân hàng (đăng ký/đăng nhập, tạo tài khoản, chuyển khoản, lịch sử giao dịch). Đây là trang do sinh viên tạo — **không dùng cho production**.
 
-First, run the development server:
+## Quick Start
+
+1. Cài phụ thuộc:
+
+```bash
+npm install
+```
+
+2. Tạo file biến môi trường `.env` ở gốc repo với tối thiểu các biến sau:
+
+```
+DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+JWT_SECRET=some_long_random_secret
+```
+
+3. Sinh Prisma Client và migrate (nếu cần):
+
+```bash
+npx prisma generate
+# nếu muốn chạy migration dev
+npx prisma migrate dev --name init
+```
+
+4. Chạy dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. Mở `http://localhost:3000` để xem ứng dụng.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Lệnh build & chạy production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## Ghi chú phát triển
 
-To learn more about Next.js, take a look at the following resources:
+- Trước khi chạy, đảm bảo `.env` đã cấu hình đúng.
+- Nếu bạn thay đổi `prisma/schema.prisma`, chạy `npx prisma generate` và (nếu cần) `npx prisma migrate dev`.
+- Project sử dụng Next.js App Router và Server Actions cho một số API nội bộ; một vài route quan trọng:
+  - `GET /api/accounts/list` — danh sách tài khoản của user
+  - `POST /api/transactions/transfer` — thực hiện chuyển khoản
+  - `GET /api/accounts/search` — tìm tài khoản theo số hoặc tên
+  - `POST /api/auth/logout` — đăng xuất
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Kiểu dữ liệu công khai
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Hướng dẫn về các kiểu TypeScript công khai (public types) nằm tại `docs/TYPE_GUIDELINES.md` — đọc file đó nếu bạn phát triển UI hoặc thêm API.
 
-## Deploy on Vercel
+## Lưu ý bảo mật
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Đây là dự án demo; không lưu secrets vào repo. Khi deploy, dùng biến môi trường an toàn và cấu hình secrets trên nền tảng host.
+- Chưa có các cơ chế production-ready như rate limiting, CSRF hardening hay log audit — cần bổ sung nếu chuyển môi trường.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Contributing
+
+- Đây là dự án do sinh viên; bạn có thể mở issue hoặc PR để góp ý. Nếu muốn thêm tính năng, hãy mô tả mục tiêu và cập nhật `docs/TYPE_GUIDELINES.md` nếu thay đổi các kiểu công khai.
+
+## Tài nguyên
+
+- Next.js: https://nextjs.org
+- Prisma: https://www.prisma.io
+
+---
+Project created for learning/demo purposes. Not for production use.
