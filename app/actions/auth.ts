@@ -37,27 +37,44 @@ export async function register(formData: FormData) {
         }
       })
 
-      // Tạo Tài khoản thanh toán (Tặng 50k chào mừng)
-      const account = await tx.account.create({
-        data: {
-          userId: user.id,
-          accountNumber: generateAccountNumber(),
-          balance: 50000, 
-          isLocked: false 
-        }
-      })
+        // Tạo Tài khoản thanh toán (tạo trống ban đầu)
+        const account = await tx.account.create({
+          data: {
+            userId: user.id,
+            accountNumber: generateAccountNumber(),
+            balance: 0, // tạo trống
+            isLocked: false,
+          }
+        })
 
-      // Tạo Thẻ ATM ảo
-      await tx.card.create({
-        data: {
-          accountId: account.id,
-          cardNumber: generateCardNumber(),
-          expiryDate: '12/30',
-          cvv: generateCVV(),
-          type: 'PLATINUM',
-          isLocked: false
-        }
-      })
+        // Tạo Thẻ ATM ảo
+        await tx.card.create({
+          data: {
+            accountId: account.id,
+            cardNumber: generateCardNumber(),
+            expiryDate: '12/30',
+            cvv: generateCVV(),
+            type: 'PLATINUM',
+            isLocked: false
+          }
+        })
+
+        // Ghi một giao dịch thưởng chào mừng 50.000 VND và cập nhật số dư
+        const WELCOME_AMOUNT = 50000
+        await tx.transaction.create({
+          data: {
+            amount: WELCOME_AMOUNT,
+            description: 'Tiền thưởng chào mừng',
+            status: 'SUCCESS',
+            type: 'DEPOSIT',
+            toAccountId: account.id,
+          }
+        })
+
+        await tx.account.update({
+          where: { id: account.id },
+          data: { balance: { increment: WELCOME_AMOUNT } as any }
+        })
     })
     
     return { success: true }
