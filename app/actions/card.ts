@@ -7,7 +7,7 @@ import { verifyToken } from '@/lib/auth'
 
 // 1. Lấy danh sách thẻ của User
 export async function getMyCards() {
-  const token = (await cookies()).get('session_token')?.value
+  const token = (await cookies()).get('session')?.value
   if (!token) return []
   
   const payload = await verifyToken(token)
@@ -24,7 +24,7 @@ export async function getMyCards() {
 // 2. Hành động: Khóa / Mở khóa thẻ (Toggle Freeze)
 export async function toggleCardLock(cardId: string, currentStatus: boolean) {
   try {
-    const token = (await cookies()).get('session_token')?.value
+    const token = (await cookies()).get('session')?.value
     if (!token) return { success: false, message: 'Mất kết nối' }
       const payload = await verifyToken(token)
     
@@ -44,7 +44,7 @@ export async function toggleCardLock(cardId: string, currentStatus: boolean) {
       data: { isLocked: !currentStatus }
     })
 
-    revalidatePath('/dashboard/cards')
+    revalidatePath('/dashboard/card')
     return { 
       success: true, 
       message: currentStatus ? 'Đã gỡ bỏ lá chắn, thẻ hoạt động!' : 'Đã kích hoạt lá chắn bảo vệ (Khóa thẻ)!' 

@@ -1,7 +1,8 @@
 import React from 'react';
 import { getMyCards } from '@/actions/card';
 import { CardControlStation } from '@/components/dashboard/CardControlStation'; // Import cái mới tạo
-import { CreditCard, Zap } from 'lucide-react';
+import { CreditCard } from 'lucide-react';
+import IssueVirtualCardButton from '@/components/dashboard/IssueVirtualCardButton';
 
 export default async function CardsPage() {
   const cards = await getMyCards();
@@ -18,9 +19,7 @@ export default async function CardsPage() {
            </h2>
            <p className="text-gray-400 mt-1">Quản lý các công cụ thanh toán liên ngân hà</p>
         </div>
-        <button className="px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 rounded-xl border border-indigo-500/30 flex items-center gap-2 transition-all hover:scale-105">
-           <Zap size={16} /> Phát hành thẻ ảo
-        </button>
+        <IssueVirtualCardButton />
       </div>
 
       {/* Danh sách thẻ */}
