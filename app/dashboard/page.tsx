@@ -2,6 +2,7 @@ import React from 'react';
 import { getDashboardData } from '@/actions/dashboard';
 import { formatVND } from '@/lib/utils';
 import { ArrowUpRight, CreditCard, TrendingUp, Wallet, Send } from 'lucide-react';
+import DashboardGlobe from '@/components/dashboard/DashboardGlobe';
 import Link from 'next/link';
 
 export default async function DashboardPage() {
@@ -30,6 +31,11 @@ export default async function DashboardPage() {
           Xin chào, {user.fullName}! 👋
         </h1>
         <p className="text-gray-400">Chào mừng trở lại với QuocBank</p>
+      </div>
+
+      {/* 3D Globe */}
+      <div className="glass-cockpit rounded-3xl p-4">
+        <DashboardGlobe balance={account.balance} userName={user.fullName} />
       </div>
 
       {/* Quick Stats */}
