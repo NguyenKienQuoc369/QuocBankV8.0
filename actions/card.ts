@@ -1,1 +1,2 @@
-export { getMyCards, toggleCardLock } from './app/actions/card'
+export { getMyCards, toggleCardLock } from '../app/actions/card'
+
