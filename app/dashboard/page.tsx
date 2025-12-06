@@ -1,132 +1,111 @@
 import React from 'react';
-import { AccountActions } from '@/components/AccountActions'
-
+import { getDashboardData } from '@/actions/dashboard';
+import { formatVND } from '@/lib/utils';
 import { Scene } from '@/components/3d/Scene';
 import { DashboardScene } from '@/components/3d/DashboardScene';
-import { CardHologram } from '@/components/3d/CardHologram';
 
-import { NotificationBell } from '@/components/NotificationBell';
-import { QRCodeDisplay } from '@/components/QRCodeDisplay';
-import { SavingsCard } from '@/components/SavingsCard';
-import { ScheduledTransferCard } from '@/components/ScheduledTransferCard';
+// Import các Widget "Vũ trụ" (Sẽ tạo ở bước 3)
+import { StatCard } from '@/components/dashboard/statcard';
+import { RevenueChart } from '@/components/dashboard/revenuechart';
+import { RecentTransactions } from '@/components/dashboard/recenttransaction';
+import { QuickTransfer } from '@/components/dashboard/quicktransfer';
+import { CreditCard3D } from '@/components/dashboard/creditcard3d';
 
-const MOCK_DATA = {
-    user: { name: "Nguyễn Kiến Quốc", balance: 500000000 },
-    card: { number: "9876543210987654", holder: "NGUYEN KIEN QUOC", expiry: "12/28" },
-    savings: {
-        id: "1",
-        savingsType: "FIXED_12M",
-        interestRate: 6.8,
-        balance: 100000000,
-        estimatedInterest: 6800000,
-        startDate: new Date(),
-        maturityDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
-        daysRemaining: 365,
-        status: "ACTIVE",
-        autoRenew: true
-    },
-    transfer: {
-        id: "1",
-        frequency: "MONTHLY",
-        runCount: 5,
-        status: "ACTIVE",
-        amount: 5000000,
-        toAccountName: "Mẹ yêu",
-        toAccountNumber: "123456789",
-        message: "Gửi mẹ tiền sinh hoạt",
-        startDate: new Date(),
-        nextRunDate: new Date(),
-        lastRunAt: new Date()
-    }
-};
+export default async function DashboardPage() {
+  const data = await getDashboardData();
+  
+  if ('error' in data) return <div className="p-10 text-red-400">Error: {data.error}</div>;
+  const { user, account, transactions } = data;
 
-export default function DashboardPage() {
-    return (
-        <div className="min-h-screen bg-[#050505] text-white p-4 md:p-8 pb-24">
-            {/* --- Header: Logo & Thông báo --- */}
-            <header className="flex justify-between items-center mb-8 max-w-7xl mx-auto">
-                <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-[#00ff88] to-[#00b8ff] bg-clip-text text-transparent">
-                        QuocBank
-                    </h1>
-                    <p className="text-gray-400 text-sm">Welcome back!</p>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                    <NotificationBell />
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 border border-white/10 flex items-center justify-center shadow-lg">
-                        👤
-                    </div>
-                    {/* Account actions (create, transfer, logout) */}
-                    <div className="hidden sm:block">
-                        <AccountActions />
-                    </div>
-                </div>
-            </header>
+  return (
+    <div className="space-y-6 pb-20">
+      
+      {/* SECTION 1: CÁC CHỈ SỐ QUAN TRỌNG (STATS) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard 
+          title="Tổng tài sản thực" 
+          value={formatVND(account.balance)} 
+          trend="+12.5%" 
+          icon="wallet" 
+          color="indigo"
+        />
+        <StatCard 
+          title="Thu nhập tháng" 
+          value={formatVND(15000000)} 
+          trend="+8.2%" 
+          icon="chart" 
+          color="green"
+        />
+        <StatCard 
+          title="Chi tiêu tháng" 
+          value={formatVND(4200000)} 
+          trend="-2.4%" 
+          icon="expense" 
+          color="red"
+        />
+        <StatCard 
+          title="Điểm tín dụng" 
+          value="850" 
+          subValue="Hạng Diamond"
+          icon="shield" 
+          color="purple"
+        />
+      </div>
 
-            <main className="max-w-7xl mx-auto space-y-8">
-                
-                {/* --- Phần 1: Visual Chính (3D Balance & Thẻ) --- */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Cột Trái: 3D Scene hiển thị số dư */}
-                    <div className="lg:col-span-2 h-[450px] rounded-3xl bg-gray-900/40 border border-white/5 overflow-hidden relative shadow-2xl backdrop-blur-sm">
-                        <div className="absolute top-6 left-6 z-10">
-                            <h2 className="text-xl font-semibold text-gray-200">Tổng tài sản</h2>
-                            <p className="text-[#00ff88] text-sm font-mono mt-1">LIVE UPDATE</p>
-                        </div>
-                        {/* Nhúng Scene vào đây */}
-                        <Scene>
-                            <DashboardScene 
-                                balance={MOCK_DATA.user.balance} 
-                                userName={MOCK_DATA.user.name} 
-                            />
-                        </Scene>
-                    </div>
-
-                    {/* Cột Phải: Thẻ 3D Hologram */}
-                    <div className="h-[450px] rounded-3xl bg-gray-900/40 border border-white/5 overflow-hidden relative shadow-2xl backdrop-blur-sm flex flex-col">
-                        <div className="absolute top-6 left-6 z-10">
-                            <h2 className="text-xl font-semibold text-gray-200">Thẻ Tín Dụng</h2>
-                        </div>
-                        <Scene>
-                            <CardHologram 
-                                cardNumber={MOCK_DATA.card.number} 
-                                holderName={MOCK_DATA.card.holder} 
-                                expiryDate={MOCK_DATA.card.expiry} 
-                            />
-                        </Scene>
-                    </div>
-                </div>
-
-                {/* --- Phần 2: Các tính năng chức năng --- */}
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    
-                    {/* Ô 1: QR Code */}
-                    <div className="p-6 rounded-3xl bg-gray-900/30 border border-white/10 hover:border-[#00ff88]/30 transition-all">
-                        <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-white">
-                            <span className="text-2xl">📱</span> QR Thanh toán
-                        </h2>
-                        <QRCodeDisplay />
-                    </div>
-
-                    {/* Ô 2: Sổ tiết kiệm */}
-                    <div className="space-y-4">
-                         <h2 className="text-xl font-bold mb-2 flex items-center gap-2 px-2">
-                            <span className="text-2xl">💰</span> Sổ tiết kiệm
-                        </h2>
-                        {/* Ép kiểu any tạm thời để tránh lỗi TypeScript nếu interface chưa khớp */}
-                        <SavingsCard savings={MOCK_DATA.savings as any} />
-                    </div>
-
-                     {/* Ô 3: Chuyển khoản định kỳ */}
-                     <div className="space-y-4">
-                         <h2 className="text-xl font-bold mb-2 flex items-center gap-2 px-2">
-                            <span className="text-2xl">⏰</span> Lịch chuyển tiền
-                        </h2>
-                        <ScheduledTransferCard transfer={MOCK_DATA.transfer as any} />
-                    </div>
-                </div>
-            </main>
+      {/* SECTION 2: BIỂU ĐỒ & THẺ (MAIN VISUAL) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[450px]">
+        {/* Biểu đồ dòng tiền (Chiếm 2 phần) */}
+        <div className="lg:col-span-2 glass-cockpit rounded-3xl p-6 flex flex-col">
+          <h3 className="text-lg font-bold mb-4 text-indigo-300 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"/>
+            Phân tích dòng tiền (Real-time)
+          </h3>
+          <div className="flex-1 w-full h-full min-h-0">
+            <RevenueChart />
+          </div>
         </div>
-    );
+
+        {/* Thẻ 3D & Scene (Chiếm 1 phần) */}
+        <div className="glass-cockpit rounded-3xl relative overflow-hidden group">
+           <div className="absolute inset-0 z-0 opacity-60">
+             <Scene>
+                <DashboardScene balance={account.balance} userName={user.username} />
+             </Scene>
+           </div>
+           <div className="relative z-10 p-6 flex flex-col h-full justify-between pointer-events-none">
+              <div>
+                <h3 className="text-lg font-bold text-white">Thẻ ảo Platinum</h3>
+                <p className="text-sm text-gray-400">**** **** **** {account.card?.cardNumber.slice(-4) || '0000'}</p>
+              </div>
+              <div className="pointer-events-auto transform group-hover:scale-105 transition-transform duration-500">
+                <CreditCard3D 
+                  cardNumber={account.card?.cardNumber || ''} 
+                  holder={user.name || user.username} 
+                  expiry={account.card?.expiryDate || ''}
+                />
+              </div>
+           </div>
+        </div>
+      </div>
+
+      {/* SECTION 3: GIAO DỊCH & CHUYỂN TIỀN */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Danh sách giao dịch */}
+        <div className="lg:col-span-2 glass-cockpit rounded-3xl p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-bold text-white">Lịch sử hoạt động</h3>
+            <button className="text-xs text-indigo-400 hover:text-white transition-colors border border-indigo-500/30 px-3 py-1 rounded-full">Xuất báo cáo</button>
+          </div>
+          <RecentTransactions transactions={transactions} currentUserId={account.userId} />
+        </div>
+
+        {/* Chuyển tiền nhanh */}
+        <div className="glass-cockpit rounded-3xl p-6">
+          <h3 className="text-lg font-bold text-white mb-4">Chuyển tốc độ ánh sáng</h3>
+          <QuickTransfer />
+        </div>
+      </div>
+
+    </div>
+  );
 }
