@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Sphere, Text } from '@react-three/drei'
 import * as THREE from 'three'
@@ -66,6 +66,29 @@ function BalanceSun({ balance }: { balance: number }) {
 
 function FloatingParticles() {
   const particlesRef = useRef<THREE.Points>(null)
+  const [positions, setPositions] = useState<Float32Array | null>(null)
+
+  useEffect(() => {
+    let mounted = true
+    const particleCount = 100
+    const positionsArr = new Float32Array(particleCount * 3)
+
+    const populate = () => {
+      for (let i = 0; i < particleCount; i++) {
+        positionsArr[i * 3] = (Math.random() - 0.5) * 20
+        positionsArr[i * 3 + 1] = (Math.random() - 0.5) * 20
+        positionsArr[i * 3 + 2] = (Math.random() - 0.5) * 20
+      }
+      if (mounted) setPositions(positionsArr)
+    }
+
+    // Schedule on next frame to avoid sync setState in effect
+    const raf = requestAnimationFrame(populate)
+    return () => {
+      mounted = false
+      cancelAnimationFrame(raf)
+    }
+  }, [])
 
   useFrame((state) => {
     if (particlesRef.current) {
@@ -73,19 +96,10 @@ function FloatingParticles() {
     }
   })
 
-  const particleCount = 100
-  const positions = new Float32Array(particleCount * 3)
-
-  for (let i = 0; i < particleCount; i++) {
-    positions[i * 3] = (Math.random() - 0.5) * 20
-    positions[i * 3 + 1] = (Math.random() - 0.5) * 20
-    positions[i * 3 + 2] = (Math.random() - 0.5) * 20
-  }
-
   return (
     <points ref={particlesRef}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="attributes-position" args={[positions || new Float32Array(0), 3]} />
       </bufferGeometry>
       <pointsMaterial
         size={0.05}

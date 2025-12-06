@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react';
-import { PROVIDERS, payBill } from '@/actions/bills';
+import { useState, useActionState, useEffect } from 'react';
+import { payBill } from '@/actions/bills';
+import { PROVIDERS } from '@/lib/providers';
 import { FloatingInput } from '@/components/auth/FloatingInput';
 import { Zap, Droplets, Wifi, Satellite, Tv, ArrowRight, CheckCircle, Hash } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,8 +12,7 @@ const iconMap: any = { Zap, Droplets, Wifi, Satellite, Tv };
 
 export default function BillsPage() {
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
-  // useActionState không phải hook React gốc; nếu dùng server action, ensure hook exists.
-  const [state, formAction, isPending] = (null as any) as [any, any, boolean];
+  const [state, formAction, isPending] = useActionState(payBill, null);
   const [step, setStep] = useState(1); // 1: Chọn, 2: Nhập liệu
 
   // Reset khi thành công

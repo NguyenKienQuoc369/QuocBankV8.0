@@ -1,1 +1,1 @@
-export { PROVIDERS, payBill } from '../app/actions/bills'
+export * from '../app/actions/bills'

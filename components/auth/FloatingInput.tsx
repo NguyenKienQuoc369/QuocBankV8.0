@@ -1,22 +1,16 @@
-"use client"
+'use client'
 
 import React from 'react'
 
-export interface FloatingInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label: string
-  icon?: any
-}
-
-export function FloatingInput({ label, icon: Icon, ...props }: FloatingInputProps) {
+export function FloatingInput(props: any) {
+  const { label, icon: Icon, isPassword, className = '', ...rest } = props
   return (
-    <label className="block">
-      <span className="text-sm text-gray-400 mb-1 block">{label}</span>
+    <label className={`block relative ${className}`}>
+      <div className="text-xs text-gray-400 mb-1">{label}</div>
       <div className="flex items-center gap-2">
-        {Icon && <Icon className="text-gray-400" size={18} />}
-        <input {...props} className={`w-full px-3 py-2 rounded-md bg-white/5 text-white ${props.className || ''}`} />
+        {Icon && <Icon className="text-gray-400" />}
+        <input type={isPassword ? 'password' : props.type || 'text'} {...rest} className="w-full bg-black/20 border border-white/5 rounded-md px-3 py-2 text-white" />
       </div>
     </label>
   )
 }
-
-export default FloatingInput

@@ -12,7 +12,7 @@ import { generateAccountNumber } from '@/lib/utils'
 export async function createAccount() {
   const session = await getSession()
   if (!session?.id) return { error: 'Unauthorized' }
-  const userId = (session as any).id as string
+  const userId = String(session.id)
 
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -52,8 +52,9 @@ export async function createAccount() {
     })
 
     return { success: true, account: result }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Create account error:', error)
-    return { error: error?.message || 'Lỗi hệ thống' }
+    const message = error instanceof Error ? error.message : String(error)
+    return { error: message || 'Lỗi hệ thống' }
   }
 }

@@ -26,13 +26,13 @@ export async function toggleCardLock(cardId: string, currentStatus: boolean) {
   try {
     const token = (await cookies()).get('session_token')?.value
     if (!token) return { success: false, message: 'Mất kết nối' }
-    const payload = await verifyToken(token)
+      const payload = await verifyToken(token)
     
     // Kiểm tra quyền sở hữu thẻ (Security Check)
     const card = await prisma.card.findFirst({
       where: { 
         id: cardId,
-        account: { userId: payload?.id as string }
+        account: { userId: String(payload?.id) }
       }
     })
 
@@ -50,7 +50,9 @@ export async function toggleCardLock(cardId: string, currentStatus: boolean) {
       message: currentStatus ? 'Đã gỡ bỏ lá chắn, thẻ hoạt động!' : 'Đã kích hoạt lá chắn bảo vệ (Khóa thẻ)!' 
     }
 
-  } catch (error) {
-    return { success: false, message: 'Lỗi hệ thống máy chủ' }
+    } catch (error) {
+    console.error('Toggle card lock error:', error)
+    const message = error instanceof Error ? error.message : String(error)
+    return { success: false, message: message || 'Lỗi hệ thống máy chủ' }
   }
 }
