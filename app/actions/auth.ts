@@ -5,7 +5,6 @@ import { hashPassword, createToken, setSessionCookie, verifyPassword, clearSessi
 import { generateAccountNumber, generateCardNumber, generateCVV } from '@/lib/utils'
 import { redirect } from 'next/navigation'
 
-// --- ĐĂNG KÝ ---
 export async function register(formData: FormData) {
   const username = formData.get('username') as string
   const password = formData.get('password') as string
@@ -16,7 +15,6 @@ export async function register(formData: FormData) {
   }
 
   try {
-    // 1. Kiểm tra user tồn tại chưa
     const existingUser = await prisma.user.findUnique({
       where: { username }
     })
@@ -35,7 +33,7 @@ export async function register(formData: FormData) {
           username,
           password: hashedPassword, // ĐÃ SỬA: Dùng 'password' khớp với schema
           fullName,
-          // avatarUrl: ... // ĐÃ BỎ: Vì schema của anh chưa có trường này
+          // avatarUrl: ... // ĐÃ BỎ
         }
       })
 
@@ -79,7 +77,6 @@ export async function login(formData: FormData) {
   try {
     const user = await prisma.user.findUnique({ where: { username } })
 
-    // ĐÃ SỬA: Dùng user.password thay vì user.passwordHash
     if (!user || !(await verifyPassword(password, user.password))) {
       return { error: 'Sai tên đăng nhập hoặc mật khẩu' }
     }
