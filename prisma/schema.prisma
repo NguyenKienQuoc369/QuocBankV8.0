@@ -1,0 +1,95 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. Người dùng (Dùng để đăng nhập)
+model User {
+  id            String         @id @default(cuid())
+  username      String         @unique
+  password      String         // Mật khẩu đã mã hóa
+  fullName      String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  // Quan hệ: Một người có thể có 1 tài khoản ngân hàng chính
+  accounts      Account[]
+}
+
+// 2. Tài khoản Ngân hàng (Chứa tiền)
+model Account {
+  id            String   @id @default(cuid())
+  userId        String
+  accountNumber String   @unique // Số tài khoản (VD: 9999999999)
+  balance       Float    @default(0)
+  isLocked      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Quan hệ ngược
+  cards         Card[]
+  sentTransactions     Transaction[] @relation("SentTransactions")
+  receivedTransactions Transaction[] @relation("ReceivedTransactions")
+  savings              SavingsAccount[]
+
+  @@index([userId])
+}
+
+// 3. Thẻ ATM/Visa ảo (Để hiển thị cho đẹp)
+model Card {
+  id         String   @id @default(cuid())
+  accountId  String
+  cardNumber String   @unique
+  expiryDate String   // MM/YY
+  cvv        String
+  type       String   @default("PLATINUM")
+  isLocked   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  account    Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+}
+
+// 4. Lịch sử Giao dịch
+model Transaction {
+  id            String   @id @default(cuid())
+  amount        Float
+  description   String?
+  status        String   @default("SUCCESS") // SUCCESS, FAILED
+  type          String   // TRANSFER, DEPOSIT, WITHDRAW, RECEIVE
+  createdAt     DateTime @default(now())
+
+  // Người gửi
+  fromAccountId String?
+  fromAccount   Account? @relation("SentTransactions", fields: [fromAccountId], references: [id])
+
+  // Người nhận
+  toAccountId   String?
+  toAccount     Account? @relation("ReceivedTransactions", fields: [toAccountId], references: [id])
+
+  @@index([fromAccountId])
+  @@index([toAccountId])
+}
+
+// 5. Sổ tiết kiệm
+model SavingsAccount {
+  id           String    @id @default(cuid())
+  accountId    String
+  amount       Float
+  term         Int       // Kỳ hạn (tháng)
+  interestRate Float     // Lãi suất (%)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  maturityDate DateTime? // Ngày đáo hạn
+
+  account      Account   @relation(fields: [accountId], references: [id])
+}
