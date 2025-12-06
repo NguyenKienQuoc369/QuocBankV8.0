@@ -1,15 +1,8 @@
 import React from 'react';
 import { getDashboardData } from '@/actions/dashboard';
 import { formatVND } from '@/lib/utils';
-import { Scene } from '@/components/3d/Scene';
-import { DashboardScene } from '@/components/3d/DashboardScene';
-
-// Import các Widget "Vũ trụ" (Sẽ tạo ở bước 3)
-import { StatCard } from '@/components/dashboard/statcard';
-import { RevenueChart } from '@/components/dashboard/revenuechart';
-import { RecentTransactions } from '@/components/dashboard/recenttransaction';
-import { QuickTransfer } from '@/components/dashboard/quicktransfer';
-import { CreditCard3D } from '@/components/dashboard/creditcard3d';
+import { ArrowUpRight, CreditCard, TrendingUp, Wallet, Send } from 'lucide-react';
+import Link from 'next/link';
 
 export default async function DashboardPage() {
   const data = await getDashboardData();
@@ -17,92 +10,166 @@ export default async function DashboardPage() {
   if ('error' in data) return <div className="p-10 text-red-400">Error: {data.error}</div>;
   const { user, account, transactions } = data;
 
+  // Calculate some stats
+  const recentIncome = transactions
+    .filter((t: any) => t.toAccountId === account.id)
+    .slice(0, 5)
+    .reduce((sum: number, t: any) => sum + t.amount, 0);
+  
+  const recentExpense = transactions
+    .filter((t: any) => t.fromAccountId === account.id)
+    .slice(0, 5)
+    .reduce((sum: number, t: any) => sum + t.amount, 0);
+
   return (
     <div className="space-y-6 pb-20">
       
-      {/* SECTION 1: CÁC CHỈ SỐ QUAN TRỌNG (STATS) */}
+      {/* Welcome Section */}
+      <div className="glass-cockpit rounded-3xl p-8">
+        <h1 className="text-3xl font-bold text-white mb-2">
+          Xin chào, {user.fullName}! 👋
+        </h1>
+        <p className="text-gray-400">Chào mừng trở lại với QuocBank</p>
+      </div>
+
+      {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard 
-          title="Tổng tài sản thực" 
-          value={formatVND(account.balance)} 
-          trend="+12.5%" 
-          icon="wallet" 
-          color="indigo"
-        />
-        <StatCard 
-          title="Thu nhập tháng" 
-          value={formatVND(15000000)} 
-          trend="+8.2%" 
-          icon="chart" 
-          color="green"
-        />
-        <StatCard 
-          title="Chi tiêu tháng" 
-          value={formatVND(4200000)} 
-          trend="-2.4%" 
-          icon="expense" 
-          color="red"
-        />
-        <StatCard 
-          title="Điểm tín dụng" 
-          value="850" 
-          subValue="Hạng Diamond"
-          icon="shield" 
-          color="purple"
-        />
-      </div>
-
-      {/* SECTION 2: BIỂU ĐỒ & THẺ (MAIN VISUAL) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[450px]">
-        {/* Biểu đồ dòng tiền (Chiếm 2 phần) */}
-        <div className="lg:col-span-2 glass-cockpit rounded-3xl p-6 flex flex-col">
-          <h3 className="text-lg font-bold mb-4 text-indigo-300 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"/>
-            Phân tích dòng tiền (Real-time)
-          </h3>
-          <div className="flex-1 w-full h-full min-h-0">
-            <RevenueChart />
+        <div className="glass-cockpit rounded-2xl p-6 hover:scale-105 transition-transform duration-300">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600">
+              <Wallet className="w-6 h-6 text-white" />
+            </div>
           </div>
+          <h3 className="text-gray-400 text-sm mb-2">Số dư khả dụng</h3>
+          <p className="text-2xl font-bold text-white">{formatVND(account.balance)}</p>
         </div>
 
-        {/* Thẻ 3D & Scene (Chiếm 1 phần) */}
-        <div className="glass-cockpit rounded-3xl relative overflow-hidden group">
-           <div className="absolute inset-0 z-0 opacity-60">
-             <Scene>
-                <DashboardScene balance={account.balance} userName={user.username} />
-             </Scene>
-           </div>
-           <div className="relative z-10 p-6 flex flex-col h-full justify-between pointer-events-none">
-              <div>
-                <h3 className="text-lg font-bold text-white">Thẻ ảo Platinum</h3>
-                <p className="text-sm text-gray-400">**** **** **** {account.card?.cardNumber.slice(-4) || '0000'}</p>
-              </div>
-              <div className="pointer-events-auto transform group-hover:scale-105 transition-transform duration-500">
-                <CreditCard3D 
-                  cardNumber={account.card?.cardNumber || ''} 
-                  holder={user.name || user.username} 
-                  expiry={account.card?.expiryDate || ''}
-                />
-              </div>
-           </div>
+        <div className="glass-cockpit rounded-2xl p-6 hover:scale-105 transition-transform duration-300">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-green-600">
+              <TrendingUp className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-sm font-semibold text-green-400">+{formatVND(recentIncome)}</span>
+          </div>
+          <h3 className="text-gray-400 text-sm mb-2">Thu nhập gần đây</h3>
+          <p className="text-2xl font-bold text-white">
+            {transactions.filter((t: any) => t.toAccountId === account.id).length} giao dịch
+          </p>
+        </div>
+
+        <div className="glass-cockpit rounded-2xl p-6 hover:scale-105 transition-transform duration-300">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-red-500 to-red-600">
+              <Send className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-sm font-semibold text-red-400">-{formatVND(recentExpense)}</span>
+          </div>
+          <h3 className="text-gray-400 text-sm mb-2">Chi tiêu gần đây</h3>
+          <p className="text-2xl font-bold text-white">
+            {transactions.filter((t: any) => t.fromAccountId === account.id).length} giao dịch
+          </p>
+        </div>
+
+        <div className="glass-cockpit rounded-2xl p-6 hover:scale-105 transition-transform duration-300">
+          <div className="flex items-start justify-between mb-4">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600">
+              <CreditCard className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <h3 className="text-gray-400 text-sm mb-2">Thẻ đang dùng</h3>
+          <p className="text-2xl font-bold text-white">
+            {account.card ? '1 thẻ' : 'Chưa có thẻ'}
+          </p>
+          {account.card && (
+            <p className="text-sm text-gray-500 mt-1">**** {account.card.cardNumber.slice(-4)}</p>
+          )}
         </div>
       </div>
 
-      {/* SECTION 3: GIAO DỊCH & CHUYỂN TIỀN */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Danh sách giao dịch */}
-        <div className="lg:col-span-2 glass-cockpit rounded-3xl p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-bold text-white">Lịch sử hoạt động</h3>
-            <button className="text-xs text-indigo-400 hover:text-white transition-colors border border-indigo-500/30 px-3 py-1 rounded-full">Xuất báo cáo</button>
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Link href="/dashboard/transfer" className="glass-cockpit rounded-2xl p-6 hover:scale-105 transition-all group">
+          <div className="flex items-center gap-4">
+            <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 group-hover:scale-110 transition-transform">
+              <Send className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-lg">Chuyển tiền</h3>
+              <p className="text-sm text-gray-400">Gửi tiền nhanh chóng</p>
+            </div>
           </div>
-          <RecentTransactions transactions={transactions} currentUserId={account.userId} />
-        </div>
+        </Link>
 
-        {/* Chuyển tiền nhanh */}
-        <div className="glass-cockpit rounded-3xl p-6">
-          <h3 className="text-lg font-bold text-white mb-4">Chuyển tốc độ ánh sáng</h3>
-          <QuickTransfer />
+        <Link href="/dashboard/card" className="glass-cockpit rounded-2xl p-6 hover:scale-105 transition-all group">
+          <div className="flex items-center gap-4">
+            <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 group-hover:scale-110 transition-transform">
+              <CreditCard className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-lg">Quản lý thẻ</h3>
+              <p className="text-sm text-gray-400">Xem và điều khiển thẻ</p>
+            </div>
+          </div>
+        </Link>
+
+        <Link href="/dashboard/bills" className="glass-cockpit rounded-2xl p-6 hover:scale-105 transition-all group">
+          <div className="flex items-center gap-4">
+            <div className="p-4 rounded-xl bg-gradient-to-br from-green-500 to-green-600 group-hover:scale-110 transition-transform">
+              <Wallet className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-lg">Thanh toán</h3>
+              <p className="text-sm text-gray-400">Hóa đơn & dịch vụ</p>
+            </div>
+          </div>
+        </Link>
+      </div>
+
+      {/* Recent Transactions */}
+      <div className="glass-cockpit rounded-3xl p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-bold text-white">Giao dịch gần đây</h3>
+          <Link href="/dashboard/reports" className="text-sm text-indigo-400 hover:text-white transition-colors flex items-center gap-1">
+            Xem tất cả <ArrowUpRight className="w-4 h-4" />
+          </Link>
+        </div>
+        
+        <div className="space-y-3">
+          {transactions.slice(0, 5).map((tx: any) => {
+            const isIncoming = tx.toAccountId === account.id;
+            return (
+              <div
+                key={tx.id}
+                className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${isIncoming ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+                    {isIncoming ? '↓' : '↑'}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">
+                      {tx.description || (isIncoming ? 'Nhận tiền' : 'Chuyển tiền')}
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      {new Date(tx.createdAt).toLocaleDateString('vi-VN')}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className={`font-bold ${isIncoming ? 'text-green-400' : 'text-red-400'}`}>
+                    {isIncoming ? '+' : '-'}{formatVND(tx.amount)}
+                  </p>
+                  <p className="text-xs text-gray-500">{tx.type}</p>
+                </div>
+              </div>
+            );
+          })}
+          
+          {transactions.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              Chưa có giao dịch nào
+            </div>
+          )}
         </div>
       </div>
 
