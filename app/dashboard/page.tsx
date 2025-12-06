@@ -1,4 +1,5 @@
 import React from 'react';
+import { AccountActions } from '@/components/AccountActions'
 
 import { Scene } from '@/components/3d/Scene';
 import { DashboardScene } from '@/components/3d/DashboardScene';
@@ -55,6 +56,10 @@ export default function DashboardPage() {
                     <NotificationBell />
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 border border-white/10 flex items-center justify-center shadow-lg">
                         👤
+                    </div>
+                    {/* Account actions (create, transfer, logout) */}
+                    <div className="hidden sm:block">
+                        <AccountActions />
                     </div>
                 </div>
             </header>
