@@ -4,7 +4,7 @@ import { useState, useActionState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { login } from '@/app/actions/auth' // Import server action gốc
-import { WarpSpeed } from '@/components/ui/warpspeed' // Đảm bảo đúng đường dẫn file bạn đã có
+import { WarpSpeed } from '@/components/ui/WarpSpeed' // Đảm bảo đúng đường dẫn file bạn đã có
 import AuthOrb from '@/components/auth/AuthOrb'
 import { LogIn, Key, User, Loader2, ShieldCheck } from 'lucide-react'
 

@@ -22,3 +22,4 @@ export interface SavingsAccountInfo {
 }
 
 export type { SavingsAccountInfo as default }
+export * from '../app/actions/savings'
