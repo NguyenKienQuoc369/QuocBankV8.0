@@ -1,10 +1,12 @@
+// app/login/page.tsx
 'use client'
 
-import { useState, useActionState } from 'react'
+import { useState, useActionState, useEffect } from 'react' // Thêm useEffect
 import Link from 'next/link'
+import { useRouter } from 'next/navigation' // Thêm useRouter
 import { motion } from 'framer-motion'
-import { login } from '@/app/actions/auth' // Import server action gốc
-import { WarpSpeed } from '@/components/ui/WarpSpeed' // Đảm bảo đúng đường dẫn file bạn đã có
+import { login } from '@/app/actions/auth' 
+import { WarpSpeed } from '@/components/ui/WarpSpeed' 
 import AuthOrb from '@/components/auth/AuthOrb'
 import { LogIn, Key, User, Loader2, ShieldCheck } from 'lucide-react'
 
@@ -17,6 +19,18 @@ const initialState = {
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(login, initialState)
   const [isFocused, setIsFocused] = useState<string | null>(null)
+  const router = useRouter() // Hook điều hướng
+
+  // --- PHẦN BỔ SUNG QUAN TRỌNG ---
+  // Lắng nghe trạng thái thành công để chuyển hướng
+  useEffect(() => {
+    if (state?.success) {
+      // Chuyển hướng ngay lập tức hoặc chờ 1 xíu để hiện hiệu ứng
+      router.refresh() // Làm mới cache router
+      router.push('/dashboard') 
+    }
+  }, [state?.success, router])
+  // --------------------------------
 
   return (
     <div className="min-h-screen w-full bg-black text-white flex items-center justify-center relative overflow-hidden font-sans">
@@ -26,7 +40,7 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-80" />
       </div>
 
-      {/* Main Container - Split Layout */}
+      {/* Main Container */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -140,13 +154,13 @@ export default function LoginPage() {
 
               {/* Submit Button */}
               <button 
-                disabled={isPending}
+                disabled={isPending || state?.success}
                 className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.4)] hover:shadow-[0_0_30px_rgba(79,70,229,0.6)] transition-all transform active:scale-95 disabled:opacity-50 disabled:scale-100 flex items-center justify-center gap-2 relative overflow-hidden group"
               >
                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                {isPending ? (
+                {isPending || state?.success ? (
                   <>
-                    <Loader2 className="animate-spin" size={20} /> Đang xác thực...
+                    <Loader2 className="animate-spin" size={20} /> {state?.success ? 'Đang chuyển hướng...' : 'Đang xác thực...'}
                   </>
                 ) : (
                   <>
