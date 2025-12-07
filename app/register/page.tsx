@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { register } from '@/app/actions/auth' // Import server action gốc
-import { SupernovaBackground } from '@/components/ui/SupernovaBackground' // Đảm bảo đúng file bạn đã có
+import { CosmicBackground } from '@/components/ui/CosmicBackground' 
 import AuthOrb from '@/components/auth/AuthOrb'
 import { Rocket, User, Lock, Mail, Loader2, CheckCircle2 } from 'lucide-react'
 
@@ -33,7 +33,7 @@ export default function RegisterPage() {
     <div className="min-h-screen w-full bg-black text-white flex items-center justify-center relative overflow-hidden font-sans">
       {/* Background Layer */}
       <div className="absolute inset-0 z-0">
-        <SupernovaBackground />
+        <CosmicBackground />
         <div className="absolute inset-0 bg-black/60" />
       </div>
 

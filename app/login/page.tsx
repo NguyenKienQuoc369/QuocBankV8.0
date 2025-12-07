@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation' // Thêm useRouter
 import { motion } from 'framer-motion'
 import { login } from '@/app/actions/auth' 
 import { WarpSpeed } from '@/components/ui/WarpSpeed' 
+import { CosmicBackground } from '@/components/ui/CosmicBackground' 
 import AuthOrb from '@/components/auth/AuthOrb'
 import { LogIn, Key, User, Loader2, ShieldCheck } from 'lucide-react'
 
