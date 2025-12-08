@@ -10,8 +10,8 @@ import { FloatingElement } from '@/components/ui/FloatingElement'
 import { ScrollRocket } from '@/components/ui/ScrollRocket'
 import { HoloDashboard } from '@/components/ui/HoloDashboard'
 import { HyperText } from '@/components/ui/HyperText'
-import { CosmicLogo } from '@/components/ui/CosmicLogo' // <--- ĐÃ IMPORT LOGO
-import { ArrowRight, ShieldCheck, Zap, Globe, CreditCard, Rocket, PlayCircle, Cpu, Server, Activity, Smartphone, Star, Users, CheckCircle } from 'lucide-react'
+import { CosmicLogo } from '@/components/ui/CosmicLogo' // IMPORT LOGO
+import { ArrowRight, ShieldCheck, Zap, Globe, Rocket, PlayCircle, Server, Activity, Smartphone, Star, Users, CheckCircle, ChevronDown } from 'lucide-react'
 import { motion, useScroll, useTransform, useSpring, useInView, Variants } from 'framer-motion'
 
 // --- ANIMATION VARIANTS ---
@@ -27,7 +27,7 @@ const staggerContainer: Variants = {
 
 // --- SUB-COMPONENTS ---
 
-// 1. Số nhảy (Counter Animation)
+// 1. Số nhảy
 function Counter({ value }: { value: number }) {
   const ref = useRef(null)
   const isInView = useInView(ref)
@@ -45,7 +45,7 @@ function Counter({ value }: { value: number }) {
   return <span ref={ref}>{display.toLocaleString()}</span>
 }
 
-// 2. Logo đối tác chạy vô tận
+// 2. Marquee
 function PartnerMarquee() {
   const partners = ["GALAX_CORP", "STAR_LINK", "NEBULA_PAY", "QUANTUM_VC", "ORBIT_TECH", "VOID_BANK", "SOLAR_ENERGY"]
   return (
@@ -65,7 +65,7 @@ function PartnerMarquee() {
   )
 }
 
-// --- MAIN PAGE COMPONENT ---
+// --- MAIN PAGE ---
 
 export default function LandingPage() {
   const targetRef = useRef<HTMLDivElement>(null)
@@ -77,10 +77,10 @@ export default function LandingPage() {
   return (
     <div ref={targetRef} className="min-h-screen flex flex-col font-sans text-white relative overflow-x-hidden selection:bg-[#00ff88] selection:text-black">
       
-      {/* 1. TÊN LỬA SCROLL */}
+      {/* 1. SCROLL ROCKET */}
       <ScrollRocket />
 
-      {/* 2. BACKGROUND LAYERS */}
+      {/* 2. BACKGROUND */}
       <div className="fixed inset-0 z-0">
         <CosmicBackground />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-15 mix-blend-overlay"></div>
@@ -90,8 +90,6 @@ export default function LandingPage() {
       {/* 3. NAVBAR */}
       <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 transition-all duration-300">
         <div className="max-w-7xl mx-auto flex items-center justify-between bg-black/20 backdrop-blur-xl border border-white/5 rounded-full px-6 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
-          
-          {/* --- LOGO ĐÃ THAY MỚI --- */}
           <Link href="/" className="flex items-center gap-3 group">
             <CosmicLogo size={40} />
             <span className="font-bold tracking-widest text-lg">QUOC<span className="text-[#00ff88]">BANK</span></span>
@@ -123,7 +121,6 @@ export default function LandingPage() {
       <section className="relative z-10 w-full min-h-screen flex items-center pt-20 pb-20">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center w-full">
           
-          {/* Cột Trái: Text Content */}
           <motion.div style={{ y: yHero, opacity: opacityHero }} className="flex flex-col gap-8 text-center lg:text-left z-20">
             <FloatingElement duration={4}>
               <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-[#00ff88] backdrop-blur-md w-fit mx-auto lg:mx-0">
@@ -155,7 +152,6 @@ export default function LandingPage() {
               </button>
             </div>
 
-            {/* Live Stats */}
             <div className="pt-8 border-t border-white/10 flex justify-center lg:justify-start gap-12">
                {[
                  { val: 5000000, label: "Công dân", icon: Users },
@@ -174,7 +170,7 @@ export default function LandingPage() {
             </div>
           </motion.div>
 
-          {/* Cột Phải: Holo Dashboard */}
+          {/* HOLO DASHBOARD */}
           <div className="hidden lg:block relative z-10 perspective-1000">
              <FloatingElement duration={6} yOffset={20}>
                 <HoloDashboard />
@@ -182,7 +178,7 @@ export default function LandingPage() {
           </div>
         </div>
         
-        {/* Scroll Indicator */}
+        {/* SCROLL INDICATOR */}
         <motion.div 
           animate={{ y: [0, 10, 0], opacity: [0.5, 1, 0.5] }} 
           transition={{ duration: 2, repeat: Infinity }}
@@ -193,10 +189,10 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* 5. INFINITE MARQUEE */}
+      {/* 5. PARTNERS */}
       <PartnerMarquee />
 
-      {/* 6. FEATURES GRID */}
+      {/* 6. FEATURES */}
       <section id="Tính" className="relative z-10 py-32">
         <div className="max-w-7xl mx-auto px-6">
           <div className="mb-20 text-center">
@@ -262,7 +258,7 @@ export default function LandingPage() {
                </SpotlightCard>
             </motion.div>
 
-            {/* Card 4 */}
+            {/* Card 4: VIRTUAL CARD */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 }}
               whileHover={{ y: -5 }} className="md:col-span-2"
@@ -283,10 +279,13 @@ export default function LandingPage() {
                       className="w-full md:w-1/2 aspect-video bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-white/10 p-8 flex flex-col justify-between shadow-2xl relative overflow-hidden"
                     >
                        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+                       
                        <div className="flex justify-between items-start relative z-10">
                           <div className="text-2xl font-bold italic text-white tracking-tighter">VISA</div>
-                          <Cpu size={36} className="text-[#00ff88]" />
+                          {/* --- ĐÃ THAY CPU BẰNG LOGO CỦA ANH Ở ĐÂY --- */}
+                          <CosmicLogo size={40} />
                        </div>
+                       
                        <div className="relative z-10">
                           <div className="text-white text-lg mb-2 font-mono tracking-widest text-shadow">4532  8899  1024  9999</div>
                           <div className="flex justify-between text-xs text-white/50 font-bold tracking-widest">
@@ -332,9 +331,6 @@ export default function LandingPage() {
               <h2 className="text-4xl lg:text-5xl font-bold leading-tight">
                  Ngân hàng trong <br/> <span className="text-[#00ff88]">Túi Áo Phi Hành Gia</span>
               </h2>
-              <p className="text-gray-400 text-lg">
-                 Truy cập tài khoản mọi lúc, mọi nơi - kể cả khi bạn đang ở trạm vũ trụ ISS hay bề mặt Sao Hỏa.
-              </p>
               <div className="space-y-4">
                  {[
                     "Xác thực sinh trắc học mống mắt",
@@ -392,7 +388,6 @@ export default function LandingPage() {
       <footer className="relative z-10 bg-black pt-20 pb-10 px-6 border-t border-white/10">
           <div className="max-w-4xl mx-auto text-center mb-20">
              <h2 className="text-5xl font-bold mb-6"><HyperText text="Sẵn sàng cất cánh?" /></h2>
-             <p className="text-gray-400 mb-8">Tham gia cùng 5 triệu công dân ngân hà đang sử dụng QuocBank hôm nay.</p>
              <Link href="/register">
                <button className="px-10 py-4 bg-[#00ff88] text-black font-bold text-xl rounded-full hover:shadow-[0_0_50px_#00ff88] transition-all transform hover:scale-105">
                   <HyperText text="Mở Tài Khoản Ngay" className="text-black" />
@@ -402,7 +397,6 @@ export default function LandingPage() {
 
           <div className="max-w-7xl mx-auto border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-600">
             <div className="flex items-center gap-2">
-               {/* LOGO FOOTER */}
                <CosmicLogo size={32} /> 
                © 2025 QuocBank. All rights reserved.
             </div>
