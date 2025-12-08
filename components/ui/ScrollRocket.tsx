@@ -2,108 +2,87 @@
 
 import { motion, useScroll, useSpring, useTransform, useMotionValueEvent } from 'framer-motion'
 import Image from 'next/image'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 
 export function ScrollRocket() {
   const { scrollYProgress, scrollY } = useScroll()
-  const [isFlying, setIsFlying] = useState(false)
+  const [direction, setDirection] = useState(180) // 180 = Xuống, 0 = Lên
   
-  // 1. PHÁT HIỆN TRẠNG THÁI BAY
-  // Nếu cuộn quá 50px thì coi như đã cất cánh
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    setIsFlying(latest > 50)
-  })
-
-  // 2. VẬT LÝ CHUYỂN ĐỘNG
+  // 1. LÀM MƯỢT CHUYỂN ĐỘNG
   const smoothProgress = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
     restDelta: 0.001
   })
 
-  // Tự động quay đầu (U-Turn)
-  const rotateValue = useSpring(180, { stiffness: 200, damping: 20 })
+  // 2. XÁC ĐỊNH HƯỚNG ĐỂ XOAY ĐẦU
   useMotionValueEvent(scrollY, "change", (latest) => {
     const prev = scrollY.getPrevious() || 0
     const diff = latest - prev
-    if (Math.abs(diff) > 5) { // Chỉ xoay khi cuộn đủ mạnh để tránh rung
-       rotateValue.set(diff > 0 ? 180 : 0)
+    if (Math.abs(diff) > 1) { 
+       // Nếu đang cuộn xuống -> Xoay 180 (Mũi xuống)
+       // Nếu đang cuộn lên -> Xoay 0 (Mũi lên)
+       setDirection(diff > 0 ? 180 : 0)
     }
   })
 
-  // 3. QUỸ ĐẠO BAY
-  // Y: Xuất phát từ 10vh (gọn gàng ở trên)
-  const yPosition = useTransform(smoothProgress, [0, 1], ['10vh', '95vh'])
-  
-  // X: Lượn sóng (Chỉ lượn khi đã bay được một đoạn - nhân với smoothProgress để tại 0 nó là 0)
-  const xPosition = useTransform(smoothProgress, (latest) => {
-    // Nếu chưa bay (gần 0) thì X = 0 để nằm giữa
-    const amplitude = latest < 0.05 ? 0 : 450
-    return Math.sin(latest * Math.PI * 6) * amplitude
-  })
-
-  // Góc nghiêng: Chỉ nghiêng khi đang bay
-  const bankingRotation = useTransform(smoothProgress, (latest) => {
-    if (latest < 0.05) return 0 // Lúc đỗ thì thẳng băng
-    return Math.cos(latest * Math.PI * 6) * -45
-  })
+  // 3. TÍNH TOÁN VỊ TRÍ TRÊN THANH CUỘN
+  // Chạy từ 2% (đỉnh) đến 90% (đáy) chiều cao màn hình
+  const yPosition = useTransform(smoothProgress, [0, 1], ['2%', '90%'])
 
   return (
-    <div className="fixed left-1/2 top-0 bottom-0 z-50 w-0 h-full pointer-events-none hidden md:block">
+    <div className="fixed right-8 top-0 bottom-0 z-50 w-12 hidden md:flex flex-col justify-center pointer-events-none">
       
+      {/* --- THANH RAY (TRACK) --- */}
+      <div className="absolute top-8 bottom-8 left-1/2 -translate-x-1/2 w-[1px] bg-white/10 rounded-full"></div>
+
+      {/* --- VỆT TIẾN ĐỘ (PROGRESS FILL) --- */}
+      {/* Một tia sáng chạy từ đỉnh xuống tới vị trí tên lửa */}
       <motion.div 
-        style={{ y: yPosition, x: xPosition }}
-        className="absolute w-24 h-24 -ml-12 -mt-12 flex items-center justify-center will-change-transform"
+        style={{ height: yPosition }}
+        className="absolute top-8 left-1/2 -translate-x-1/2 w-[2px] bg-gradient-to-b from-transparent via-[#00ff88]/50 to-[#00ff88] shadow-[0_0_10px_#00ff88]"
+      />
+
+      {/* --- TÊN LỬA (INDICATOR) --- */}
+      <motion.div 
+        style={{ top: yPosition }}
+        className="absolute left-1/2 -translate-x-1/2 w-12 h-12 flex items-center justify-center will-change-transform"
       >
         <motion.div
-           style={{ rotateZ: bankingRotation, rotate: rotateValue }}
+           animate={{ rotate: direction }}
+           transition={{ type: "spring", stiffness: 120, damping: 20 }}
            className="relative w-full h-full flex items-center justify-center"
         >
-           {/* Rung lắc (Chỉ rung khi đang bay) */}
+           {/* Rung lắc nhẹ cho sinh động */}
            <motion.div
-              animate={isFlying ? { x: [-1, 1, -1], y: [1, -1, 1] } : { x: 0, y: 0 }}
-              transition={{ duration: 0.1, repeat: Infinity, ease: "linear" }}
+              animate={{ y: [1, -1, 1] }}
+              transition={{ duration: 0.2, repeat: Infinity, ease: "linear" }}
               className="relative"
            >
-              {/* Khiên năng lượng (Chỉ hiện khi bay) */}
-              <motion.div 
-                animate={{ opacity: isFlying ? 0.3 : 0, scale: isFlying ? 1 : 0.8 }}
-                className="absolute -inset-6 bg-[#00ff88] blur-2xl rounded-full transition-all duration-700"
-              />
-
-              {/* --- ĐỘNG CƠ PHUN LỬA (THRUSTER) --- */}
-              {/* Ẩn đi khi chưa bay (Opacity 0) */}
-              <motion.div 
-                animate={{ opacity: isFlying ? 1 : 0, scale: isFlying ? 1 : 0 }}
-                transition={{ duration: 0.3 }} // Hiệu ứng bật lửa từ từ
-                className="absolute top-[75%] left-1/2 -translate-x-1/2 z-0"
-              >
+              {/* Động cơ phun lửa (Luôn nằm ở đuôi tàu) */}
+              <div className="absolute top-[75%] left-1/2 -translate-x-1/2 z-0">
                  <motion.div 
-                   animate={{ height: [20, 40, 20], opacity: [0.9, 1, 0.9] }}
-                   transition={{ duration: 0.05, repeat: Infinity }}
-                   className="w-2 bg-white rounded-full blur-[2px] mx-auto shadow-[0_0_15px_white]"
-                 />
-                 <motion.div 
-                   animate={{ height: [40, 70, 40], width: [10, 14, 10], opacity: [0.6, 0.8, 0.6] }}
+                   animate={{ height: [10, 20, 10], opacity: [0.8, 1, 0.8] }}
                    transition={{ duration: 0.1, repeat: Infinity }}
-                   className="absolute top-0 left-1/2 -translate-x-1/2 bg-[#00ff88] rounded-full blur-md"
+                   className="w-1 bg-white rounded-full blur-[1px] mx-auto"
                  />
-              </motion.div>
-
-              {/* --- HÌNH ẢNH TÊN LỬA --- */}
-              <div className="relative z-10 w-20 h-20 drop-shadow-[0_10px_30px_rgba(0,255,136,0.3)]">
-                 <Image 
-                   src="/rocket.png" 
-                   alt="Spaceship" 
-                   width={80} 
-                   height={80} 
-                   className="object-contain" 
+                 <motion.div 
+                   animate={{ height: [20, 35, 20], width: [6, 10, 6], opacity: [0.5, 0.8, 0.5] }}
+                   transition={{ duration: 0.15, repeat: Infinity }}
+                   className="absolute top-0 left-1/2 -translate-x-1/2 bg-[#00ff88] rounded-full blur-sm"
                  />
               </div>
 
-              {/* Đèn báo trạng thái (Đỏ = Đỗ, Xanh = Bay) */}
-              <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-1 rounded-full shadow-[0_0_5px_currentColor] transition-colors duration-500 ${isFlying ? 'bg-green-400' : 'bg-red-500 animate-pulse'}`}></div>
-
+              {/* Hình ảnh tên lửa */}
+              <div className="relative z-10 w-8 h-8 drop-shadow-[0_0_15px_rgba(0,255,136,0.6)]">
+                 <Image 
+                   src="/rocket.png" 
+                   alt="Scroll Rocket" 
+                   width={32} 
+                   height={32} 
+                   className="object-contain" 
+                 />
+              </div>
            </motion.div>
         </motion.div>
       </motion.div>
