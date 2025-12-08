@@ -10,7 +10,8 @@ import { FloatingElement } from '@/components/ui/FloatingElement'
 import { ScrollRocket } from '@/components/ui/ScrollRocket'
 import { HoloDashboard } from '@/components/ui/HoloDashboard'
 import { HyperText } from '@/components/ui/HyperText'
-import { ArrowRight, ShieldCheck, Zap, Globe, CreditCard, Rocket, PlayCircle, Cpu, Server, Activity, Smartphone, Star, Users, CheckCircle, ChevronDown } from 'lucide-react'
+import { CosmicLogo } from '@/components/ui/CosmicLogo' // <--- ĐÃ IMPORT LOGO
+import { ArrowRight, ShieldCheck, Zap, Globe, CreditCard, Rocket, PlayCircle, Cpu, Server, Activity, Smartphone, Star, Users, CheckCircle } from 'lucide-react'
 import { motion, useScroll, useTransform, useSpring, useInView, Variants } from 'framer-motion'
 
 // --- ANIMATION VARIANTS ---
@@ -44,7 +45,7 @@ function Counter({ value }: { value: number }) {
   return <span ref={ref}>{display.toLocaleString()}</span>
 }
 
-// 2. Logo đối tác chạy vô tận (Infinite Marquee)
+// 2. Logo đối tác chạy vô tận
 function PartnerMarquee() {
   const partners = ["GALAX_CORP", "STAR_LINK", "NEBULA_PAY", "QUANTUM_VC", "ORBIT_TECH", "VOID_BANK", "SOLAR_ENERGY"]
   return (
@@ -70,30 +71,29 @@ export default function LandingPage() {
   const targetRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: targetRef, offset: ["start start", "end start"] })
   
-  // Parallax: Text trôi chậm hơn nền để tạo chiều sâu
   const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "60%"])
   const opacityHero = useTransform(scrollYProgress, [0, 0.4], [1, 0])
 
   return (
     <div ref={targetRef} className="min-h-screen flex flex-col font-sans text-white relative overflow-x-hidden selection:bg-[#00ff88] selection:text-black">
       
-      {/* 1. TÊN LỬA SCROLL INDICATOR */}
+      {/* 1. TÊN LỬA SCROLL */}
       <ScrollRocket />
 
       {/* 2. BACKGROUND LAYERS */}
       <div className="fixed inset-0 z-0">
         <CosmicBackground />
-        {/* Lớp nhiễu hạt (Noise) tăng độ thực */}
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-15 mix-blend-overlay"></div>
-        {/* Gradient tối dần xuống dưới */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/95 pointer-events-none" />
       </div>
 
       {/* 3. NAVBAR */}
       <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 transition-all duration-300">
         <div className="max-w-7xl mx-auto flex items-center justify-between bg-black/20 backdrop-blur-xl border border-white/5 rounded-full px-6 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
-          <Link href="/" className="flex items-center gap-2 group">
-            <motion.div whileHover={{ rotate: 180 }} className="w-9 h-9 rounded-xl bg-[#00ff88] flex items-center justify-center font-bold text-black text-lg shadow-[0_0_15px_rgba(0,255,136,0.6)]">Q</motion.div>
+          
+          {/* --- LOGO ĐÃ THAY MỚI --- */}
+          <Link href="/" className="flex items-center gap-3 group">
+            <CosmicLogo size={40} />
             <span className="font-bold tracking-widest text-lg">QUOC<span className="text-[#00ff88]">BANK</span></span>
           </Link>
           
@@ -174,7 +174,7 @@ export default function LandingPage() {
             </div>
           </motion.div>
 
-          {/* Cột Phải: Holo Dashboard (Trôi lơ lửng) */}
+          {/* Cột Phải: Holo Dashboard */}
           <div className="hidden lg:block relative z-10 perspective-1000">
              <FloatingElement duration={6} yOffset={20}>
                 <HoloDashboard />
@@ -196,7 +196,7 @@ export default function LandingPage() {
       {/* 5. INFINITE MARQUEE */}
       <PartnerMarquee />
 
-      {/* 6. FEATURES GRID (Bento + Spotlight) */}
+      {/* 6. FEATURES GRID */}
       <section id="Tính" className="relative z-10 py-32">
         <div className="max-w-7xl mx-auto px-6">
           <div className="mb-20 text-center">
@@ -207,7 +207,7 @@ export default function LandingPage() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[350px]">
-            {/* Card 1: Warp Speed */}
+            {/* Card 1 */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
               whileHover={{ y: -5 }} className="md:col-span-2"
@@ -226,7 +226,7 @@ export default function LandingPage() {
                </SpotlightCard>
             </motion.div>
 
-            {/* Card 2: Security */}
+            {/* Card 2 */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
               whileHover={{ y: -5 }}
@@ -244,7 +244,7 @@ export default function LandingPage() {
                </SpotlightCard>
             </motion.div>
 
-            {/* Card 3: Global */}
+            {/* Card 3 */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }}
               whileHover={{ y: -5 }}
@@ -262,7 +262,7 @@ export default function LandingPage() {
                </SpotlightCard>
             </motion.div>
 
-            {/* Card 4: Virtual Card */}
+            {/* Card 4 */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 }}
               whileHover={{ y: -5 }} className="md:col-span-2"
@@ -302,29 +302,18 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 7. APP SHOWCASE (Điện thoại Hologram) */}
+      {/* 7. APP SHOWCASE */}
       <section id="Ứng" className="relative z-10 py-32 bg-gradient-to-b from-transparent to-black/80">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
            <motion.div 
              initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
              className="relative mx-auto"
            >
-              {/* Giả lập điện thoại */}
               <div className="w-[320px] h-[650px] border-[8px] border-gray-800 rounded-[3rem] bg-black overflow-hidden relative shadow-[0_0_50px_rgba(0,255,136,0.2)]">
                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-xl z-20"></div>
-                 {/* App UI */}
                  <div className="w-full h-full bg-gray-900 p-6 flex flex-col relative">
                     <div className="absolute inset-0 bg-[url('/textures/stars_milky_way.jpg')] opacity-30 bg-cover"></div>
-                    <div className="flex justify-between items-center mb-8 relative z-10">
-                       <div className="w-8 h-8 rounded-full bg-gray-700"></div>
-                       <div className="w-8 h-8 rounded-full bg-gray-700"></div>
-                    </div>
-                    <div className="text-white text-3xl font-bold mb-1 relative z-10">Total Balance</div>
-                    <div className="text-[#00ff88] text-4xl font-mono font-bold mb-8 relative z-10">9,850,000 ₫</div>
-                    <div className="flex gap-4 mb-8 relative z-10">
-                       <div className="flex-1 h-12 bg-[#00ff88] rounded-xl flex items-center justify-center text-black font-bold">Gửi</div>
-                       <div className="flex-1 h-12 bg-white/10 rounded-xl flex items-center justify-center text-white">Nhận</div>
-                    </div>
+                    <div className="text-[#00ff88] text-4xl font-mono font-bold mb-8 relative z-10 mt-16 text-center">9,850,000 ₫</div>
                     <div className="space-y-4 relative z-10">
                        {[1,2,3].map(i => (
                           <div key={i} className="h-16 bg-white/5 rounded-xl flex items-center px-4 gap-4">
@@ -335,7 +324,6 @@ export default function LandingPage() {
                     </div>
                  </div>
               </div>
-              {/* Vòng tròn trang trí */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] border border-white/5 rounded-full -z-10 animate-spin-slow pointer-events-none"></div>
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] border border-[#00ff88]/20 rounded-full -z-10 animate-spin-reverse-slow pointer-events-none"></div>
            </motion.div>
@@ -413,7 +401,11 @@ export default function LandingPage() {
           </div>
 
           <div className="max-w-7xl mx-auto border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-600">
-            <div>© 2025 QuocBank Interstellar. All rights reserved.</div>
+            <div className="flex items-center gap-2">
+               {/* LOGO FOOTER */}
+               <CosmicLogo size={32} /> 
+               © 2025 QuocBank. All rights reserved.
+            </div>
             <div className="flex gap-6">
                <a href="#" className="hover:text-white">Điều khoản</a>
                <a href="#" className="hover:text-white">Bảo mật</a>
