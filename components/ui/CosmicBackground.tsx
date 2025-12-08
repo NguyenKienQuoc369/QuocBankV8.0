@@ -1,92 +1,58 @@
 'use client'
 
-import { Canvas, useFrame } from '@react-three/fiber'
-import { Stars, OrbitControls, useTexture, Environment } from '@react-three/drei'
+import { Canvas } from '@react-three/fiber'
+import { Stars, OrbitControls, Environment } from '@react-three/drei'
 import { Planet } from '@/components/3d/Planet' 
-import { Suspense, useRef } from 'react'
-import * as THREE from 'three'
+import { Suspense } from 'react'
 
-// 1. Component vẽ đường quỹ đạo (Orbit Line)
+// Component đường quỹ đạo (giữ nguyên)
 function OrbitPath({ radius }: { radius: number }) {
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]}>
-      {/* Tạo hình vành khuyên rất mỏng */}
       <ringGeometry args={[radius - 0.05, radius + 0.05, 128]} />
-      <meshBasicMaterial 
-        color="#ffffff" 
-        transparent 
-        opacity={0.15} // Mờ nhẹ để không rối mắt
-        side={THREE.DoubleSide} 
-      />
-    </mesh>
-  )
-}
-
-// 2. Component Hào quang Mặt Trời
-function SunGlow() {
-  const meshRef = useRef<THREE.Mesh>(null)
-  useFrame((state) => {
-    if (meshRef.current) meshRef.current.lookAt(state.camera.position)
-  })
-  return (
-    <mesh ref={meshRef} position={[0, 0, 0]}>
-      <planeGeometry args={[28, 28]} />
-      <meshBasicMaterial 
-        color="#ffaa00" 
-        transparent 
-        opacity={0.2} 
-        blending={THREE.AdditiveBlending} 
-        depthWrite={false} 
-      />
+      <meshBasicMaterial color="#ffffff" transparent opacity={0.1} side={THREE.DoubleSide} />
     </mesh>
   )
 }
 
 function SolarSystemScene() {
-  // Cấu hình khoảng cách (Bán kính quỹ đạo)
-  const R_MERCURY = 12
-  const R_VENUS = 18
-  const R_EARTH = 26
-  const R_MARS = 34
-  const R_JUPITER = 50
-  const R_SATURN = 70
-  const R_URANUS = 90
-  const R_NEPTUNE = 110
+  const R_MERCURY = 14
+  const R_VENUS = 20
+  const R_EARTH = 30  // Tăng khoảng cách một chút để đỡ dính chùm
+  const R_MARS = 40
+  const R_JUPITER = 60
+  const R_SATURN = 80
+  const R_URANUS = 100
+  const R_NEPTUNE = 120
 
   return (
     <>
-      <pointLight position={[0, 0, 0]} intensity={2.5} color="#ffffff" decay={0} distance={1000} />
+      {/* Ánh sáng chính từ tâm */}
+      <pointLight position={[0, 0, 0]} intensity={3} color="#ffaa00" decay={0} distance={2000} />
       <ambientLight intensity={0.05} />
 
       {/* Nền Ngân Hà */}
-      <Environment 
-        files="/textures/stars_milky_way.jpg" 
-        background={true}
-        blur={0.02}
-      />
-      <Stars radius={300} depth={100} count={3000} factor={4} saturation={0} fade speed={1} />
+      <Environment files="/textures/stars_milky_way.jpg" background={true} blur={0.02} />
+      <Stars radius={300} depth={100} count={5000} factor={4} saturation={0} fade speed={1} />
 
       {/* --- MẶT TRỜI --- */}
+      {/* Đã xóa SunGlow ở đây, Planet.tsx sẽ tự lo phần hào quang tròn */}
       <Planet position={[0, 0, 0]} size={8} color="#FDB813" textureFile="sun.jpg" isSun={true} rotationSpeed={0.0005} />
-      <SunGlow />
 
-      {/* --- CÁC HÀNH TINH & QUỸ ĐẠO --- */}
+      {/* --- CÁC HÀNH TINH --- */}
       
-      {/* 1. Mercury */}
       <OrbitPath radius={R_MERCURY} />
-      {/* Vị trí: x = R * cos(angle), z = R * sin(angle). Chọn góc ngẫu nhiên cho tự nhiên */}
-      <Planet position={[R_MERCURY * 0.8, 0, R_MERCURY * 0.6]} size={0.8} color="#A5A5A5" textureFile="mercury.jpg" rotationSpeed={0.004} />
+      <Planet position={[R_MERCURY * 0.7, 0, R_MERCURY * 0.7]} size={0.8} color="#A5A5A5" textureFile="mercury.jpg" rotationSpeed={0.004} />
 
-      {/* 2. Venus */}
       <OrbitPath radius={R_VENUS} />
-      <Planet position={[-R_VENUS * 0.5, 0, R_VENUS * 0.86]} size={1.5} color="#E3BB76" textureFile="venus_atmosphere.jpg" rotationSpeed={0.002} hasAtmosphere={true} atmosphereColor="#DDBB88"/>
+      <Planet position={[-R_VENUS * 0.5, 0, R_VENUS * 0.8]} size={1.5} color="#E3BB76" textureFile="venus_atmosphere.jpg" rotationSpeed={0.002} hasAtmosphere={true} atmosphereColor="#DDBB88"/>
 
-      {/* 3. EARTH (Nhân vật chính) */}
+      {/* EARTH */}
       <OrbitPath radius={R_EARTH} />
-      <group position={[R_EARTH, 0, 0]}> {/* Đặt Earth ngay góc nhìn chính */}
+      <group position={[R_EARTH, 0, 0]}> 
         <Planet 
           position={[0, 0, 0]} 
-          size={2.2} 
+          size={2.5} 
           color="#2233ff" 
           textureFile="earth_daymap.jpg"      
           nightMapFile="earth_nightmap.jpg"   
@@ -95,23 +61,19 @@ function SolarSystemScene() {
           hasAtmosphere={true}
           atmosphereColor="#4488ff"
         />
-        {/* Moon xoay quanh Earth */}
-        <Planet position={[3, 0.5, 3]} size={0.6} color="#888888" textureFile="moon.jpg" rotationSpeed={0.001} />
+        <Planet position={[3.5, 0.5, 3.5]} size={0.6} color="#888888" textureFile="moon.jpg" rotationSpeed={0.001} />
       </group>
 
-      {/* 4. Mars */}
       <OrbitPath radius={R_MARS} />
       <Planet position={[0, 0, -R_MARS]} size={1.2} color="#dd4422" textureFile="mars.jpg" rotationSpeed={0.008} hasAtmosphere={true} atmosphereColor="#aa3322"/>
 
-      {/* 5. Jupiter */}
       <OrbitPath radius={R_JUPITER} />
-      <Planet position={[-R_JUPITER * 0.7, 0, -R_JUPITER * 0.7]} size={5} color="#C99039" textureFile="jupiter.jpg" rotationSpeed={0.01} />
+      <Planet position={[-R_JUPITER * 0.6, 0, -R_JUPITER * 0.8]} size={5.5} color="#C99039" textureFile="jupiter.jpg" rotationSpeed={0.01} />
 
-      {/* 6. Saturn */}
       <OrbitPath radius={R_SATURN} />
       <Planet 
-        position={[R_SATURN * 0.5, 0, R_SATURN * 0.86]} 
-        size={4} 
+        position={[R_SATURN * 0.5, 0, R_SATURN * 0.8]} 
+        size={4.5} 
         color="#EAD6B8" 
         textureFile="saturn.jpg" 
         rotationSpeed={0.005} 
@@ -120,28 +82,20 @@ function SolarSystemScene() {
         ringSize={2.2}
       />
 
-      {/* 7. Uranus */}
       <OrbitPath radius={R_URANUS} />
-      <Planet position={[-R_URANUS, 0, 0]} size={2.5} color="#D1E7E7" textureFile="uranus.jpg" rotationSpeed={0.006} />
+      <Planet position={[-R_URANUS, 0, 0]} size={3} color="#D1E7E7" textureFile="uranus.jpg" rotationSpeed={0.006} />
 
-      {/* 8. Neptune */}
       <OrbitPath radius={R_NEPTUNE} />
-      <Planet position={[0, 0, R_NEPTUNE]} size={2.4} color="#5B5DDF" textureFile="neptune.jpg" rotationSpeed={0.006} hasRing={true} ringSize={1.8}/>
+      <Planet position={[0, 0, R_NEPTUNE]} size={2.8} color="#5B5DDF" textureFile="neptune.jpg" rotationSpeed={0.006} hasRing={true} ringSize={1.8}/>
 
-      {/* --- CẤU HÌNH TƯƠNG TÁC (CONTROLS) --- */}
       <OrbitControls 
-        enableZoom={true}       // Cho phép lăn chuột zoom ra/vào
-        enablePan={false}       // Tắt di chuyển tâm để giữ Mặt trời ở giữa
-        enableRotate={true}     // Cho phép xoay chuột
-        
-        autoRotate={true}       // Tự động xoay nhẹ khi không tương tác
-        autoRotateSpeed={0.5}
-        
-        minDistance={15}        // Không cho zoom quá gần vào trong mặt trời
-        maxDistance={200}       // Không cho zoom quá xa ra ngoài hệ mặt trời
-        
-        // Bỏ giới hạn góc nhìn (minPolarAngle/maxPolarAngle) 
-        // để người dùng có thể xoay lên đỉnh hoặc xuống đáy tùy thích
+        enableZoom={true}       
+        enablePan={false}
+        enableRotate={true}     
+        autoRotate={true}       
+        autoRotateSpeed={0.4}
+        minDistance={20}        
+        maxDistance={250}       
       />
     </>
   )
@@ -151,15 +105,15 @@ export function CosmicBackground() {
   return (
     <div className="absolute inset-0 z-0 bg-black">
       <Canvas 
-        camera={{ position: [40, 20, 50], fov: 45 }} 
+        camera={{ position: [50, 20, 50], fov: 45 }} 
         gl={{ antialias: true }}
       >
         <Suspense fallback={null}>
            <SolarSystemScene />
         </Suspense>
       </Canvas>
-      {/* Lớp phủ gradient nhẹ để Text UI vẫn đọc được */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/40 pointer-events-none" />
+      {/* Overlay gradient */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/50 pointer-events-none" />
     </div>
   )
 }
