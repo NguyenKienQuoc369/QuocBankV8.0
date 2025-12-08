@@ -1,47 +1,53 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
+import { useHover } from './HoverContext' // Import context vừa tạo
 
 const CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+"
 
 export function HyperText({ text, className = "" }: { text: string, className?: string }) {
   const [displayText, setDisplayText] = useState(text)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const isParentHovered = useHover() // Nhận tín hiệu từ cha (Card/Button)
+  const [isSelfHovered, setIsSelfHovered] = useState(false) // Tín hiệu từ chính nó
 
-  const handleMouseEnter = () => {
+  // Hàm kích hoạt hiệu ứng chạy chữ
+  const triggerAnimation = () => {
     let iteration = 0
-    clearInterval(intervalRef.current!)
+    if (intervalRef.current) clearInterval(intervalRef.current)
 
     intervalRef.current = setInterval(() => {
       setDisplayText((prev) => 
         text
           .split("")
           .map((letter, index) => {
-            // Giữ nguyên khoảng trắng để không bị giật layout
             if (letter === " ") return " "
-            
-            // Nếu đã chạy qua ký tự này rồi thì hiển thị chữ gốc
-            if (index < iteration) {
-              return text[index]
-            }
-            // Ngược lại thì hiển thị ký tự random
+            if (index < iteration) return text[index]
             return CHARACTERS[Math.floor(Math.random() * CHARACTERS.length)]
           })
           .join("")
       )
 
       if (iteration >= text.length) {
-        clearInterval(intervalRef.current!)
+        if (intervalRef.current) clearInterval(intervalRef.current)
       }
 
-      iteration += 1 / 3 // Tốc độ giải mã
+      iteration += 1 / 3
     }, 30)
   }
 
+  // Effect: Chạy khi cha Hover HOẶC chính nó Hover
+  useEffect(() => {
+    if (isParentHovered || isSelfHovered) {
+      triggerAnimation()
+    }
+  }, [isParentHovered, isSelfHovered])
+
   return (
     <span 
-      className={`cursor-pointer inline-block ${className}`}
-      onMouseEnter={handleMouseEnter}
+      className={`inline-block ${className}`}
+      onMouseEnter={() => setIsSelfHovered(true)}
+      onMouseLeave={() => setIsSelfHovered(false)}
     >
       {displayText}
     </span>
