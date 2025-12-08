@@ -8,24 +8,29 @@ import * as THREE from 'three'
 interface PlanetProps {
   position: [number, number, number]
   size: number
-  textureFile?: string
-  color: string
+  textureFile?: string      // Tên file ảnh (VD: earth_daymap.jpg)
+  color?: string            // Màu dự phòng
   rotationSpeed?: number
-  isSun?: boolean
+  isSun?: boolean           // Có phải mặt trời không?
+  
+  // Các option nâng cao
   hasRing?: boolean
-  ringTextureFile?: string // Tên file ảnh vành đai (saturn_ring.png)
+  ringTextureFile?: string  // Ảnh vành đai (saturn_ring.png)
   ringSize?: number
-  hasClouds?: boolean
-  hasAtmosphere?: boolean
+  
+  hasClouds?: boolean       // Mây (earth_clouds.jpg)
+  
+  hasAtmosphere?: boolean   // Khí quyển (Glow)
   atmosphereColor?: string
-  nightMapFile?: string // File ánh đèn đêm (earth_nightmap.jpg)
+  
+  nightMapFile?: string     // Ánh đèn đêm (earth_nightmap.jpg)
 }
 
 export function Planet({ 
   position, 
   size, 
   textureFile, 
-  color, 
+  color = "#ffffff", 
   rotationSpeed = 0.005,
   isSun = false,
   hasRing = false,
@@ -40,91 +45,89 @@ export function Planet({
   const cloudsRef = useRef<THREE.Mesh>(null)
   const ringRef = useRef<THREE.Mesh>(null)
   
-  // 1. Load texture chính
-  const texture = useTexture(
-    textureFile ? `/textures/${textureFile}` : '/textures/earth_daymap.jpg',
-    (t) => { t.colorSpace = THREE.SRGBColorSpace }
-  )
+  // 1. Load Texture chính (Có xử lý fallback nếu không truyền tên file)
+  // Mặc định dùng 'earth_daymap.jpg' nếu không có file nào khác được chỉ định để tránh lỗi
+  const texturePath = textureFile ? `/textures/${textureFile}` : '/textures/earth_daymap.jpg'
+  
+  const texture = useTexture(texturePath, (t) => { 
+    t.colorSpace = THREE.SRGBColorSpace 
+  })
 
-  // 2. Load texture phụ (Mây, Đèn đêm, Vành đai)
-  // Dùng useTexture cho mảng để load nhiều ảnh cùng lúc nếu cần
+  // 2. Load các Texture phụ (chỉ load khi cần)
   const cloudTex = hasClouds ? useTexture('/textures/earth_clouds.jpg') : null
   const nightTex = nightMapFile ? useTexture(`/textures/${nightMapFile}`) : null
   const ringTex = ringTextureFile ? useTexture(`/textures/${ringTextureFile}`) : null
 
   if (ringTex) {
-    ringTex.rotation = -Math.PI / 2 // Xoay texture vành đai cho đúng chiều
+    ringTex.rotation = -Math.PI / 2
   }
 
   useFrame(() => {
-    // Xoay hành tinh
     if (meshRef.current) meshRef.current.rotation.y += rotationSpeed
-    
-    // Xoay mây (nhanh hơn chút)
     if (cloudsRef.current) cloudsRef.current.rotation.y += rotationSpeed * 1.15
-
-    // Xoay vành đai (nếu cần)
     if (ringRef.current && hasRing) ringRef.current.rotation.z -= rotationSpeed * 0.5
   })
 
   return (
     <group position={position}>
-      {/* --- BỀ MẶT HÀNH TINH --- */}
+      {/* BỀ MẶT HÀNH TINH */}
       <Sphere ref={meshRef} args={[size, 64, 64]}>
         {isSun ? (
-          <meshBasicMaterial map={texture} />
+          // Mặt trời dùng BasicMaterial (Tự phát sáng, không bóng đổ)
+          <meshBasicMaterial map={texture} color={textureFile ? undefined : color} />
         ) : (
+          // Hành tinh dùng StandardMaterial (Nhận ánh sáng)
           <meshStandardMaterial
-            map={texture} // Ảnh ban ngày
+            map={texture}
             color="#ffffff"
             metalness={0.4}
             roughness={0.7}
-            // Hiệu ứng Đèn Đêm (City Lights)
+            // Logic đèn đêm (chỉ hiện ở vùng tối)
             emissiveMap={nightTex || undefined}
             emissive={nightTex ? new THREE.Color("#ffddaa") : new THREE.Color("#000000")}
-            emissiveIntensity={nightTex ? 0.5 : 0} // Độ sáng đèn đêm
+            emissiveIntensity={nightTex ? 0.8 : 0} 
           />
         )}
       </Sphere>
 
-      {/* --- LỚP MÂY (EARTH) --- */}
+      {/* LỚP MÂY (EARTH) */}
       {hasClouds && cloudTex && (
         <mesh ref={cloudsRef}>
-          <sphereGeometry args={[size * 1.01, 64, 64]} />
+          <sphereGeometry args={[size * 1.015, 64, 64]} />
           <meshStandardMaterial
             map={cloudTex}
             transparent={true}
             opacity={0.8}
             blending={THREE.AdditiveBlending}
             side={THREE.DoubleSide}
-            alphaMap={cloudTex} // Dùng chính ảnh mây làm mặt nạ cắt phần đen
+            alphaMap={cloudTex} // Dùng chính ảnh mây làm mask
           />
         </mesh>
       )}
 
-      {/* --- KHÍ QUYỂN (GLOW) --- */}
+      {/* KHÍ QUYỂN (GLOW) */}
       {(hasAtmosphere || isSun) && (
         <Sphere args={[size * (isSun ? 1.05 : 1.03), 32, 32]}>
           <meshBasicMaterial
             color={isSun ? "#ffaa00" : atmosphereColor}
             transparent
-            opacity={isSun ? 0.2 : 0.1}
+            opacity={isSun ? 0.3 : 0.15}
             side={THREE.BackSide}
             blending={THREE.AdditiveBlending}
           />
         </Sphere>
       )}
 
-      {/* --- VÀNH ĐAI (SATURN) --- */}
+      {/* VÀNH ĐAI (SATURN) */}
       {hasRing && (
         <mesh 
           ref={ringRef} 
-          rotation={[Math.PI / 2.2, 0, 0]} // Nghiêng vành đai
+          rotation={[Math.PI / 2.2, 0, 0]} 
         >
           <ringGeometry args={[size * 1.4, size * ringSize, 128]} />
           <meshStandardMaterial 
-            map={ringTex} // Dùng ảnh saturn_ring.png
-            color={ringTex ? "#ffffff" : "#CDBA96"} // Nếu ko có ảnh thì dùng màu
+            map={ringTex || undefined}
+            color={ringTex ? "#ffffff" : "#CDBA96"} 
             side={THREE.DoubleSide} 
             transparent 
             opacity={0.9} 
