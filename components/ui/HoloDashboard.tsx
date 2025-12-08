@@ -1,86 +1,152 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Activity, Wifi, Shield, Globe, Cpu } from 'lucide-react'
+import { ShieldCheck, Activity, Zap, Server, Globe } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
-export function HoloDashboard() {
+// Component con: Vòng tròn xoay (Ring)
+function HoloRing({ size, rotationDuration, borderClass, reverse = false }: { size: number, rotationDuration: number, borderClass: string, reverse?: boolean }) {
   return (
-    <motion.div 
-      initial={{ opacity: 0, x: 50 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 1, delay: 0.5 }}
-      className="relative w-full max-w-md ml-auto mr-10 hidden lg:block"
+    <motion.div
+      animate={{ rotate: reverse ? -360 : 360 }}
+      transition={{ duration: rotationDuration, repeat: Infinity, ease: "linear" }}
+      className={`absolute rounded-full border border-transparent ${borderClass}`}
+      style={{ width: size, height: size }}
+    />
+  )
+}
+
+// Component con: Thẻ thông số vệ tinh (Floating Satellite)
+function DataSatellite({ 
+  icon: Icon, 
+  label, 
+  value, 
+  angle, 
+  distance, 
+  color 
+}: { 
+  icon: any, label: string, value: string, angle: number, distance: number, color: string 
+}) {
+  // Tính toán vị trí dựa trên góc (Polar coordinates)
+  const rad = (angle * Math.PI) / 180
+  const x = Math.cos(rad) * distance
+  const y = Math.sin(rad) * distance
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: 1, duration: 0.5 }}
+      className="absolute flex items-center gap-3"
+      style={{ 
+        left: `calc(50% + ${x}px)`, 
+        top: `calc(50% + ${y}px)`, 
+        transform: 'translate(-50%, -50%)' 
+      }}
     >
-      {/* Khung viền Hologram */}
-      <div className="absolute -inset-1 bg-gradient-to-b from-[#00ff88]/20 to-transparent rounded-2xl blur-sm"></div>
-      
-      <div className="relative bg-black/40 backdrop-blur-md border border-[#00ff88]/30 rounded-2xl p-6 overflow-hidden">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-           <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-[#00ff88] rounded-full animate-ping"></div>
-              <span className="text-xs font-mono text-[#00ff88] tracking-widest">SYSTEM_MONITOR</span>
-           </div>
-           <Wifi size={16} className="text-white/50" />
-        </div>
+      {/* Đường nối laser về tâm */}
+      <div 
+        className="absolute top-1/2 left-1/2 h-[1px] bg-gradient-to-r from-transparent to-white/30 -z-10 origin-left"
+        style={{ 
+          width: distance - 40, 
+          transform: `rotate(${angle + 180}deg)`,
+          left: '50%',
+          top: '50%'
+        }} 
+      />
 
-        {/* Nội dung chính */}
-        <div className="space-y-6">
-           {/* 1. Biểu đồ sóng (Giả lập) */}
-           <div className="space-y-2">
-              <div className="flex justify-between text-xs text-gray-400">
-                 <span>MARKET_VOLATILITY</span>
-                 <span className="text-[#00ff88]">+24.5%</span>
-              </div>
-              <div className="h-12 flex items-end gap-1">
-                 {[40, 70, 30, 80, 50, 90, 60, 40, 70, 50, 80, 60].map((h, i) => (
-                    <motion.div 
-                       key={i}
-                       initial={{ height: '10%' }}
-                       animate={{ height: `${h}%` }}
-                       transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse", delay: i * 0.1 }}
-                       className="flex-1 bg-[#00ff88]/20 border-t border-[#00ff88] rounded-t-sm"
-                    />
-                 ))}
-              </div>
-           </div>
+      {/* Icon tròn */}
+      <div className={`w-10 h-10 rounded-full bg-black/60 border border-${color} flex items-center justify-center shadow-[0_0_15px_${color}] backdrop-blur-sm`}>
+        <Icon size={18} style={{ color }} />
+      </div>
 
-           {/* 2. Grid thông số */}
-           <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 bg-white/5 rounded-lg border border-white/5">
-                 <Shield size={16} className="text-blue-400 mb-2" />
-                 <div className="text-xs text-gray-500">FIREWALL</div>
-                 <div className="text-sm font-bold text-white">ACTIVE</div>
-              </div>
-              <div className="p-3 bg-white/5 rounded-lg border border-white/5">
-                 <Cpu size={16} className="text-yellow-400 mb-2" />
-                 <div className="text-xs text-gray-500">CPU LOAD</div>
-                 <div className="text-sm font-bold text-white">12%</div>
-              </div>
-           </div>
-
-           {/* 3. Bản đồ nhỏ (Visual) */}
-           <div className="relative h-32 rounded-lg border border-white/10 overflow-hidden flex items-center justify-center bg-black/20">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,255,136,0.1),transparent)]"></div>
-              {/* Vòng tròn xoay */}
-              <motion.div 
-                 animate={{ rotate: 360 }}
-                 transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                 className="w-24 h-24 border border-dashed border-white/20 rounded-full"
-              />
-              <motion.div 
-                 animate={{ rotate: -360 }}
-                 transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                 className="absolute w-16 h-16 border border-white/10 rounded-full"
-              />
-              <Globe size={24} className="text-[#00ff88] relative z-10" />
-              <div className="absolute bottom-2 left-2 text-[10px] font-mono text-gray-500">NODE: EARTH-01</div>
-           </div>
-        </div>
-
-        {/* Scan line effect */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#00ff88]/5 to-transparent h-4 w-full animate-scan pointer-events-none"></div>
+      {/* Text thông số */}
+      <div className="flex flex-col">
+        <span className="text-[10px] font-mono text-gray-400 tracking-widest uppercase">{label}</span>
+        <span className="text-sm font-bold text-white font-mono">{value}</span>
       </div>
     </motion.div>
+  )
+}
+
+export function HoloDashboard() {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
+  if (!mounted) return null
+
+  return (
+    <div className="relative w-[500px] h-[500px] flex items-center justify-center pointer-events-none select-none scale-90 lg:scale-100">
+      
+      {/* 1. LÕI NĂNG LƯỢNG (CENTER CORE) */}
+      <div className="relative z-10 w-24 h-24 bg-black/50 rounded-full border border-[#00ff88]/50 flex items-center justify-center shadow-[0_0_50px_rgba(0,255,136,0.3)] backdrop-blur-xl">
+        <div className="absolute inset-0 rounded-full border border-[#00ff88] border-dashed opacity-50 animate-spin-slow" />
+        <div className="text-center">
+           <div className="text-[10px] text-[#00ff88] animate-pulse font-mono">SYS_OK</div>
+           <div className="text-2xl font-bold text-white tracking-tighter">98%</div>
+        </div>
+      </div>
+
+      {/* 2. CÁC VÒNG QUỸ ĐẠO (RINGS) */}
+      {/* Vòng 1: Quét Radar */}
+      <motion.div 
+        animate={{ rotate: 360 }}
+        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+        className="absolute w-48 h-48 rounded-full border-t border-r border-[#00ff88]/30"
+      />
+      
+      {/* Vòng 2: Nét đứt (Dash) */}
+      <HoloRing size={320} rotationDuration={20} borderClass="border-dashed border-white/10" />
+      
+      {/* Vòng 3: Nét liền mỏng (Thin) */}
+      <HoloRing size={450} rotationDuration={30} borderClass="border-white/5" reverse />
+
+      {/* Vòng 4: Hiệu ứng quét (Scanner Effect) */}
+      <div className="absolute inset-0 bg-gradient-to-t from-transparent via-[#00ff88]/5 to-transparent animate-scan opacity-30 w-full h-full rounded-full" />
+
+      {/* 3. CÁC VỆ TINH DỮ LIỆU (SATELLITES) */}
+      {/* Góc tính theo độ (0 = 3h, 90 = 6h...) */}
+      
+      {/* Góc 1: Security Shield */}
+      <DataSatellite 
+        icon={ShieldCheck} 
+        color="#00ff88" // Xanh lá
+        label="FIREWALL" 
+        value="SECURE" 
+        angle={-45} 
+        distance={180} 
+      />
+
+      {/* Góc 2: Network Activity */}
+      <DataSatellite 
+        icon={Activity} 
+        color="#3b82f6" // Xanh dương
+        label="NETWORK" 
+        value="120 TB/s" 
+        angle={-150} 
+        distance={200} 
+      />
+
+      {/* Góc 3: Energy Level */}
+      <DataSatellite 
+        icon={Zap} 
+        color="#eab308" // Vàng
+        label="ENERGY" 
+        value="STABLE" 
+        angle={30} 
+        distance={210} 
+      />
+
+      {/* Góc 4: Server Status */}
+      <DataSatellite 
+        icon={Server} 
+        color="#a855f7" // Tím
+        label="NODES" 
+        value="5,240" 
+        angle={110} 
+        distance={160} 
+      />
+
+    </div>
   )
 }
