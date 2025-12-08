@@ -40,7 +40,6 @@ export function Planet({
   const cloudsRef = useRef<THREE.Mesh>(null)
   const ringRef = useRef<THREE.Mesh>(null)
   
-  // 1. Load Texture
   const texturePath = textureFile ? `/textures/${textureFile}` : '/textures/earth_daymap.jpg'
   const texture = useTexture(texturePath, (t) => { t.colorSpace = THREE.SRGBColorSpace })
 
@@ -48,9 +47,7 @@ export function Planet({
   const nightTex = nightMapFile ? useTexture(`/textures/${nightMapFile}`) : null
   const ringTex = ringTextureFile ? useTexture(`/textures/${ringTextureFile}`) : null
 
-  if (ringTex) {
-    ringTex.rotation = -Math.PI / 2
-  }
+  if (ringTex) ringTex.rotation = -Math.PI / 2
 
   useFrame(() => {
     if (meshRef.current) meshRef.current.rotation.y += rotationSpeed
@@ -60,13 +57,11 @@ export function Planet({
 
   return (
     <group position={position}>
-      {/* --- BỀ MẶT HÀNH TINH / MẶT TRỜI --- */}
+      {/* --- BỀ MẶT --- */}
       <Sphere ref={meshRef} args={[size, 64, 64]}>
         {isSun ? (
-          // Mặt trời: Tự phát sáng cực mạnh
-          <meshBasicMaterial map={texture} color={textureFile ? undefined : color} toneMapped={false} />
+          <meshBasicMaterial map={texture} toneMapped={false} />
         ) : (
-          // Hành tinh: Phản xạ ánh sáng
           <meshStandardMaterial
             map={texture}
             color="#ffffff"
@@ -79,33 +74,21 @@ export function Planet({
         )}
       </Sphere>
 
-      {/* --- HIỆU ỨNG RIÊNG CHO MẶT TRỜI (Thay thế SunGlow cũ) --- */}
+      {/* --- HIỆU ỨNG MẶT TRỜI (Đã sửa lại gọn gàng) --- */}
       {isSun && (
-        <>
-          {/* Lớp 1: Hào quang rực rỡ sát bề mặt */}
-          <Sphere args={[size * 1.2, 32, 32]}>
+        <Sphere args={[size * 1.1, 32, 32]}> {/* Chỉ to hơn 10% */}
             <meshBasicMaterial
               color="#ffaa00"
               transparent
-              opacity={0.3}
+              opacity={0.4}
               side={THREE.BackSide}
               blending={THREE.AdditiveBlending}
             />
-          </Sphere>
-          {/* Lớp 2: Hào quang mờ tỏa xa */}
-          <Sphere args={[size * 2.5, 32, 32]}>
-             <meshBasicMaterial
-              color="#ff4400"
-              transparent
-              opacity={0.1}
-              side={THREE.BackSide}
-              blending={THREE.AdditiveBlending}
-            />
-          </Sphere>
-        </>
+        </Sphere>
+        /* ĐÃ XÓA SPHERE MÀU ĐỎ KHỔNG LỒ GÂY LỖI TẠI ĐÂY */
       )}
 
-      {/* --- LỚP MÂY (EARTH) --- */}
+      {/* --- CÁC PHẦN KHÁC GIỮ NGUYÊN --- */}
       {hasClouds && cloudTex && (
         <mesh ref={cloudsRef}>
           <sphereGeometry args={[size * 1.015, 64, 64]} />
@@ -120,9 +103,7 @@ export function Planet({
         </mesh>
       )}
 
-      {/* --- KHÍ QUYỂN (PLANETS) --- */}
-      {/* Chỉ hiện cho hành tinh thường, Mặt trời đã có logic riêng ở trên */}
-      {hasAtmosphere && !isSun && (
+      {(hasAtmosphere || isSun) && !isSun && (
         <Sphere args={[size * 1.03, 32, 32]}>
           <meshBasicMaterial
             color={atmosphereColor}
@@ -134,7 +115,6 @@ export function Planet({
         </Sphere>
       )}
 
-      {/* --- VÀNH ĐAI --- */}
       {hasRing && (
         <mesh ref={ringRef} rotation={[Math.PI / 2.2, 0, 0]}>
           <ringGeometry args={[size * 1.4, size * ringSize, 128]} />
