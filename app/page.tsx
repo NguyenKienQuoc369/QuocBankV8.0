@@ -6,8 +6,8 @@ import { CosmicBackground } from '@/components/ui/CosmicBackground'
 import { SpotlightCard } from '@/components/ui/SpotlightCard'
 import { TextDecode } from '@/components/ui/TextDecode'
 import { MagneticButton } from '@/components/ui/MagneticButton'
-import { FloatingElement } from '@/components/ui/FloatingElement' // Component mới
-import { ArrowRight, ShieldCheck, Zap, Globe, CreditCard, Rocket, PlayCircle, Cpu, Server, Activity, ChevronDown, MousePointer2 } from 'lucide-react'
+import { FloatingElement } from '@/components/ui/FloatingElement'
+import { ArrowRight, ShieldCheck, Zap, Globe, CreditCard, Rocket, PlayCircle, Cpu, Server, Activity } from 'lucide-react'
 import { motion, useScroll, useTransform, Variants } from 'framer-motion'
 
 const fadeInUp: Variants = {
@@ -23,39 +23,15 @@ const staggerContainer: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.2 }
+    transition: { staggerChildren: 0.15 }
   }
-}
-
-// Sao băng chạy trên giao diện (Overlay)
-function ShootingStarOverlay() {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      {[...Array(3)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute h-[1px] w-[100px] bg-gradient-to-r from-transparent via-white to-transparent"
-          initial={{ x: -100, y: Math.random() * 500, opacity: 0 }}
-          animate={{ x: '120vw', y: Math.random() * 500 + 100, opacity: [0, 1, 0] }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            delay: Math.random() * 5,
-            ease: "linear"
-          }}
-          style={{ top: `${Math.random() * 50}%`, left: 0, rotate: '15deg' }}
-        />
-      ))}
-    </div>
-  )
 }
 
 export default function LandingPage() {
   const targetRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: targetRef, offset: ["start start", "end start"] })
   
-  // Hiệu ứng Parallax mạnh hơn
-  const yText = useTransform(scrollYProgress, [0, 1], ["0%", "80%"])
+  const yText = useTransform(scrollYProgress, [0, 1], ["0%", "50%"])
   const opacityHero = useTransform(scrollYProgress, [0, 0.4], [1, 0])
 
   return (
@@ -64,8 +40,7 @@ export default function LandingPage() {
       {/* 1. BACKGROUND */}
       <div className="fixed inset-0 z-0">
         <CosmicBackground />
-        <ShootingStarOverlay /> {/* Sao băng chạy ngang */}
-        {/* Noise Texture */}
+        {/* Overlay Noise nhẹ */}
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 brightness-100 contrast-150 pointer-events-none mix-blend-overlay"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/90 pointer-events-none" />
       </div>
@@ -94,9 +69,11 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-3">
-             <MagneticButton className="hidden md:block text-xs font-bold px-4 py-2 hover:text-[#00ff88] transition-colors">
-               <Link href="/login">ĐĂNG NHẬP</Link>
-             </MagneticButton>
+             <Link href="/login">
+                <MagneticButton className="hidden md:block text-xs font-bold px-4 py-2 hover:text-[#00ff88] transition-colors">
+                  ĐĂNG NHẬP
+                </MagneticButton>
+             </Link>
              <Link href="/register">
                 <MagneticButton className="px-5 py-2 rounded-full bg-[#00ff88] text-black text-xs font-bold hover:bg-[#00cc6a] shadow-[0_0_20px_rgba(0,255,136,0.4)] flex items-center gap-2">
                    MỞ TÀI KHOẢN <ArrowRight size={14} />
@@ -110,7 +87,6 @@ export default function LandingPage() {
       <section className="relative z-10 w-full min-h-screen flex items-center pt-20">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center w-full">
           
-          {/* CỘT TRÁI: Nội dung chính */}
           <motion.div 
             style={{ y: yText, opacity: opacityHero }} 
             className="flex flex-col gap-8 text-center lg:text-left z-20"
@@ -131,7 +107,6 @@ export default function LandingPage() {
                    CHINH PHỤC
                 </motion.div>
                 
-                {/* Hiệu ứng Text Gradient Shimmer (Chạy màu) */}
                 <motion.span 
                   className="bg-clip-text text-transparent bg-[linear-gradient(110deg,#00ff88,45%,#ffffff,55%,#00ff88)] bg-[length:250%_100%]"
                   animate={{ backgroundPosition: ["0% 0%", "100% 0%"] }}
@@ -150,7 +125,6 @@ export default function LandingPage() {
               <Link href="/register">
                  <MagneticButton className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white text-black font-bold text-lg hover:scale-105 transition-all flex items-center justify-center gap-2 shadow-[0_0_40px_rgba(255,255,255,0.3)] relative overflow-hidden group">
                     <span className="relative z-10 flex items-center gap-2">KHỞI TẠO <Rocket size={20} /></span>
-                    {/* Hiệu ứng lướt sáng qua nút */}
                     <div className="absolute inset-0 h-full w-full scale-0 rounded-xl transition-all duration-300 group-hover:scale-100 group-hover:bg-gray-200/50"></div>
                  </MagneticButton>
               </Link>
@@ -178,11 +152,10 @@ export default function LandingPage() {
             </motion.div>
           </motion.div>
 
-          {/* CỘT PHẢI: Floating Cards (Giữ nguyên) */}
           <div className="hidden lg:block"></div>
         </div>
 
-        {/* SCROLL INDICATOR (Con chuột nhắc cuộn trang) */}
+        {/* SCROLL INDICATOR */}
         <motion.div 
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2, duration: 1 }}
           className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
@@ -198,7 +171,7 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* 4. FEATURES GRID (3D TILT EFFECT) */}
+      {/* 4. FEATURES GRID */}
       <section className="relative z-10 py-32">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div 
@@ -215,133 +188,87 @@ export default function LandingPage() {
           </motion.div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[350px]">
-            {/* Card 1: Warp Speed */}
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
-              whileHover={{ y: -10, rotateX: 5, rotateY: 5 }} 
-              className="md:col-span-2 perspective-1000"
-            >
-               <SpotlightCard className="h-full group bg-black/40 backdrop-blur-xl border-white/5" spotlightColor="rgba(79, 70, 229, 0.4)">
+            {/* ... Cards ... */}
+            <motion.div whileHover={{ y: -10, rotateX: 5, rotateY: 5 }} className="md:col-span-2 perspective-1000">
+               <SpotlightCard className="h-full group" spotlightColor="rgba(79, 70, 229, 0.4)">
                  <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] group-hover:bg-indigo-500/20 transition-all"></div>
                  <div className="relative z-10 h-full flex flex-col justify-between p-8">
-                    <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mb-4 text-indigo-400 border border-indigo-500/20 group-hover:scale-110 transition-transform">
+                    <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mb-4 text-indigo-400 border border-indigo-500/20">
                        <Zap size={32} />
                     </div>
                     <div>
                       <h3 className="text-3xl font-bold mb-3">Warp Speed Transfer</h3>
-                      <p className="text-gray-400 text-lg leading-relaxed">Chuyển tiền siêu tốc độ ánh sáng. Xử lý hàng triệu giao dịch mỗi giây nhờ mạng lưới lượng tử phân tán.</p>
+                      <p className="text-gray-400 text-lg leading-relaxed">Chuyển tiền siêu tốc độ ánh sáng. Xử lý hàng triệu giao dịch mỗi giây.</p>
                     </div>
                  </div>
                </SpotlightCard>
             </motion.div>
 
-            {/* Card 2: Security */}
-            <motion.div 
-               initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
-               whileHover={{ y: -10 }} className="perspective-1000"
-            >
-               <SpotlightCard className="h-full bg-black/40 backdrop-blur-xl border-white/5" spotlightColor="rgba(0, 255, 136, 0.3)">
+             {/* Card Security */}
+             <motion.div whileHover={{ y: -10 }} className="perspective-1000">
+               <SpotlightCard className="h-full" spotlightColor="rgba(0, 255, 136, 0.3)">
                  <div className="p-8">
                     <div className="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center mb-6 text-[#00ff88] border border-green-500/20">
                         <ShieldCheck size={28} />
                     </div>
                     <h3 className="text-2xl font-bold mb-3">Quantum Safe</h3>
-                    <p className="text-gray-400 leading-relaxed">Mã hóa đa lớp. Lá chắn năng lượng bảo vệ tài sản khỏi mọi cuộc tấn công mạng.</p>
+                    <p className="text-gray-400 leading-relaxed">Mã hóa đa lớp. Lá chắn năng lượng bảo vệ tài sản.</p>
                  </div>
                </SpotlightCard>
             </motion.div>
 
-            {/* Card 3: Global */}
-            <motion.div 
-               initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: 0.2 }}
-               whileHover={{ y: -10 }} className="perspective-1000"
-            >
-               <SpotlightCard className="h-full bg-black/40 backdrop-blur-xl border-white/5" spotlightColor="rgba(6, 182, 212, 0.3)">
+            {/* Card Global */}
+            <motion.div whileHover={{ y: -10 }} className="perspective-1000">
+               <SpotlightCard className="h-full" spotlightColor="rgba(6, 182, 212, 0.3)">
                  <div className="p-8">
                     <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 flex items-center justify-center mb-6 text-cyan-400 border border-cyan-500/20">
                         <Globe size={28} />
                     </div>
                     <h3 className="text-2xl font-bold mb-3">Universal Pay</h3>
-                    <p className="text-gray-400 leading-relaxed">Kết nối vạn vật. Thanh toán dịch vụ tại bất kỳ hành tinh nào trong liên minh.</p>
+                    <p className="text-gray-400 leading-relaxed">Kết nối vạn vật. Thanh toán dịch vụ toàn cầu.</p>
                  </div>
                </SpotlightCard>
             </motion.div>
 
-            {/* Card 4: Virtual Card */}
-            <motion.div 
-               initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: 0.3 }}
-               whileHover={{ y: -10 }} className="md:col-span-2 perspective-1000"
-            >
-               <SpotlightCard className="h-full group bg-black/40 backdrop-blur-xl border-white/5" spotlightColor="rgba(255, 255, 255, 0.2)">
+            {/* Card Virtual */}
+            <motion.div whileHover={{ y: -10 }} className="md:col-span-2 perspective-1000">
+               <SpotlightCard className="h-full group" spotlightColor="rgba(255, 255, 255, 0.2)">
                  <div className="flex flex-col md:flex-row items-center gap-10 h-full p-8">
                     <div className="flex-1">
                        <h3 className="text-3xl font-bold mb-3 text-white">Thẻ Ảo Hologram</h3>
-                       <p className="text-gray-400 mb-8 text-lg">Phát hành thẻ Visa ảo ngay lập tức. Tùy chỉnh màu sắc, hạn mức và đóng băng thẻ chỉ với một cú chạm.</p>
+                       <p className="text-gray-400 mb-8 text-lg">Phát hành thẻ Visa ảo ngay lập tức. Tùy chỉnh màu sắc và hạn mức.</p>
                        <MagneticButton className="px-6 py-3 rounded-xl border border-[#00ff88] text-[#00ff88] font-bold hover:bg-[#00ff88] hover:text-black transition-all">
                           PHÁT HÀNH NGAY
                        </MagneticButton>
                     </div>
-                    {/* Visual thẻ ảo nghiêng 3D */}
                     <motion.div 
                       whileHover={{ rotateY: 15, rotateX: -5 }}
-                      className="w-full md:w-1/2 aspect-video bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-white/10 p-8 flex flex-col justify-between shadow-2xl relative overflow-hidden group-hover:shadow-[0_0_50px_rgba(255,255,255,0.1)] transition-all duration-500"
+                      className="w-full md:w-1/2 aspect-video bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-white/10 p-8 flex flex-col justify-between shadow-2xl relative overflow-hidden"
                     >
-                       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-                       <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
-                       
                        <div className="flex justify-between items-start relative z-10">
-                          <div className="text-2xl font-bold italic text-white tracking-tighter">VISA <span className="text-[10px] not-italic font-normal opacity-50 block">INFINITE SPACE</span></div>
+                          <div className="text-2xl font-bold italic text-white tracking-tighter">VISA</div>
                           <Cpu size={36} className="text-[#00ff88]" />
                        </div>
                        <div className="relative z-10">
-                          <div className="text-white text-lg mb-2 font-mono tracking-widest text-shadow">4532  8899  1024  9999</div>
-                          <div className="flex justify-between text-xs text-white/50 font-bold tracking-widest">
-                             <span>QUOC NGUYEN</span>
-                             <span>12/99</span>
-                          </div>
+                          <div className="text-white text-lg mb-2 font-mono tracking-widest">4532  8899  1024  9999</div>
                        </div>
                     </motion.div>
                  </div>
                </SpotlightCard>
             </motion.div>
-
           </div>
         </div>
       </section>
 
       {/* FOOTER */}
       <footer className="relative z-10 bg-black pt-20 pb-10 px-6 border-t border-white/10">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center gap-2 mb-6">
+          <div className="max-w-7xl mx-auto text-center">
+             <div className="flex items-center justify-center gap-2 mb-6">
                 <div className="w-8 h-8 rounded bg-[#00ff88] flex items-center justify-center font-bold text-black text-xs">Q</div>
                 <span className="font-bold text-lg">QUOCBANK</span>
-              </div>
-              <p className="text-gray-500 max-w-sm">
-                Định hình lại tương lai tài chính. Chúng tôi cung cấp nền tảng ngân hàng an toàn, nhanh chóng và minh bạch nhất vũ trụ.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-bold text-white mb-6">Sản phẩm</h4>
-              <ul className="space-y-4 text-gray-500">
-                <li><a href="#" className="hover:text-[#00ff88] transition-colors">Tài khoản thanh toán</a></li>
-                <li><a href="#" className="hover:text-[#00ff88] transition-colors">Thẻ tín dụng ảo</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-white mb-6">Hỗ trợ</h4>
-              <ul className="space-y-4 text-gray-500">
-                <li><a href="#" className="hover:text-[#00ff88] transition-colors">Trung tâm trợ giúp</a></li>
-                <li><a href="#" className="hover:text-[#00ff88] transition-colors">Liên hệ</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="max-w-7xl mx-auto border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-600">
-            <div>© 2025 QuocBank Interstellar. All rights reserved.</div>
-            <div className="flex gap-4">
-               <span>Earth HQ</span>
-               <span>Mars Branch</span>
-            </div>
+             </div>
+             <p className="text-gray-500 mb-8">Interstellar Financial System</p>
+             <div className="text-xs text-gray-600">© 2025 QuocBank. All rights reserved.</div>
           </div>
       </footer>
     </div>

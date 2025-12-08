@@ -11,7 +11,7 @@ interface SpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
 export function SpotlightCard({ 
   children, 
   className = "", 
-  spotlightColor = "rgba(0, 255, 136, 0.25)",
+  spotlightColor = "rgba(0, 255, 136, 0.15)", // Giảm độ đậm spotlight cho đỡ gắt
   ...props 
 }: SpotlightCardProps) {
   const divRef = useRef<HTMLDivElement>(null)
@@ -20,7 +20,6 @@ export function SpotlightCard({
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!divRef.current) return
-
     const rect = divRef.current.getBoundingClientRect()
     setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top })
   }
@@ -34,19 +33,20 @@ export function SpotlightCard({
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-8 transition-transform duration-300 hover:scale-[1.02] ${className}`}
+      // QUAN TRỌNG: Giữ background cố định ở đây, không để spotlight đè lên
+      className={`relative overflow-hidden rounded-3xl border border-white/10 bg-black/40 backdrop-blur-xl transition-all duration-300 hover:border-white/20 ${className}`}
       {...props}
     >
-      {/* Lớp Spotlight di chuyển theo chuột */}
+      {/* Lớp Spotlight chỉ tác động lên Border hoặc Overlay rất nhẹ */}
       <div
-        className="pointer-events-none absolute -inset-px transition-opacity duration-300"
+        className="pointer-events-none absolute -inset-px transition-opacity duration-300 z-0"
         style={{
           opacity,
           background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 40%)`,
         }}
       />
       
-      {/* Nội dung bên trong */}
+      {/* Nội dung bên trong phải có z-index cao hơn spotlight */}
       <div className="relative z-10 h-full">{children}</div>
     </div>
   )
