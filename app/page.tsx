@@ -10,41 +10,24 @@ import { FloatingElement } from '@/components/ui/FloatingElement'
 import { ScrollRocket } from '@/components/ui/ScrollRocket'
 import { HoloDashboard } from '@/components/ui/HoloDashboard'
 import { HyperText } from '@/components/ui/HyperText'
-import { CosmicLogo } from '@/components/ui/CosmicLogo' // IMPORT LOGO
-import { ArrowRight, ShieldCheck, Zap, Globe, Rocket, PlayCircle, Server, Activity, Smartphone, Star, Users, CheckCircle, ChevronDown } from 'lucide-react'
-import { motion, useScroll, useTransform, useSpring, useInView, Variants } from 'framer-motion'
-
-const fadeInUp: Variants = {
-  hidden: { opacity: 0, y: 40 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } }
-}
-
-const staggerContainer: Variants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
-}
+import { CosmicLogo } from '@/components/ui/CosmicLogo'
+import { ClickSpark } from '@/components/ui/ClickSpark'
+import { TechUniverse } from '@/components/ui/TechUniverse' // <--- IMPORT MỚI
+import { ArrowRight, ShieldCheck, Zap, Globe, Rocket, PlayCircle, Cpu, Smartphone, Star, Users, CheckCircle, X } from 'lucide-react'
+import { motion, useScroll, useTransform, useSpring, useInView, AnimatePresence } from 'framer-motion' // Thêm AnimatePresence
 
 // --- SUB-COMPONENTS ---
 
-// 1. Số nhảy
 function Counter({ value }: { value: number }) {
   const ref = useRef(null)
   const isInView = useInView(ref)
   const springValue = useSpring(0, { bounce: 0, duration: 2500 })
   const [display, setDisplay] = useState(0)
-
-  useEffect(() => {
-    if (isInView) springValue.set(value)
-  }, [isInView, value, springValue])
-
-  useEffect(() => {
-    springValue.on("change", (latest) => setDisplay(Math.floor(latest)))
-  }, [springValue])
-
+  useEffect(() => { if (isInView) springValue.set(value) }, [isInView, value, springValue])
+  useEffect(() => { springValue.on("change", (latest) => setDisplay(Math.floor(latest))) }, [springValue])
   return <span ref={ref}>{display.toLocaleString()}</span>
 }
 
-// 2. Marquee
 function PartnerMarquee() {
   const partners = ["GALAX_CORP", "STAR_LINK", "NEBULA_PAY", "QUANTUM_VC", "ORBIT_TECH", "VOID_BANK", "SOLAR_ENERGY"]
   return (
@@ -73,27 +56,61 @@ export default function LandingPage() {
   const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "60%"])
   const opacityHero = useTransform(scrollYProgress, [0, 0.4], [1, 0])
 
+  // STATE ĐỂ MỞ DEMO
+  const [isDemoOpen, setIsDemoOpen] = useState(false)
+
   return (
     <div ref={targetRef} className="min-h-screen flex flex-col font-sans text-white relative overflow-x-hidden selection:bg-[#00ff88] selection:text-black">
       
-      {/* 1. SCROLL ROCKET */}
+      {/* GLOBAL EFFECTS */}
+      <ClickSpark />
       <ScrollRocket />
 
-      {/* 2. BACKGROUND */}
+      {/* --- MODAL DEMO (CỔNG KHÔNG GIAN) --- */}
+      <AnimatePresence>
+        {isDemoOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center overflow-hidden"
+          >
+            {/* Nút đóng */}
+            <button 
+              onClick={() => setIsDemoOpen(false)} 
+              className="absolute top-8 right-8 p-2 rounded-full border border-white/20 text-white/50 hover:text-white hover:bg-white/10 transition-all z-50"
+            >
+              <X size={32} />
+            </button>
+
+            {/* Tiêu đề Modal */}
+            <div className="absolute top-10 z-40 text-center">
+               <h2 className="text-3xl font-bold mb-2"><HyperText text="HỆ THỐNG CÔNG NGHỆ" /></h2>
+               <p className="text-gray-500">Mạng lưới vận hành QuocBank Interstellar</p>
+            </div>
+
+            {/* Nội dung chính: Tech Universe */}
+            <TechUniverse />
+            
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* -------------------------------------- */}
+
+      {/* BACKGROUND */}
       <div className="fixed inset-0 z-0">
         <CosmicBackground />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-15 mix-blend-overlay"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/95 pointer-events-none" />
       </div>
 
-      {/* 3. NAVBAR */}
+      {/* NAVBAR */}
       <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 transition-all duration-300">
         <div className="max-w-7xl mx-auto flex items-center justify-between bg-black/20 backdrop-blur-xl border border-white/5 rounded-full px-6 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
           <Link href="/" className="flex items-center gap-3 group">
             <CosmicLogo size={40} />
             <span className="font-bold tracking-widest text-lg">QUOC<span className="text-[#00ff88]">BANK</span></span>
           </Link>
-          
           <div className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-gray-400">
             {['Tính năng', 'Ứng dụng', 'Bảo mật'].map((item) => (
               <a key={item} href={`#${item.split(" ")[0]}`} className="hover:text-white transition-colors relative group px-2 py-1">
@@ -102,11 +119,8 @@ export default function LandingPage() {
               </a>
             ))}
           </div>
-
           <div className="flex items-center gap-3">
-             <Link href="/login" className="hidden md:block text-xs font-bold px-4 py-2 hover:text-[#00ff88] transition-colors">
-               <HyperText text="ĐĂNG NHẬP" />
-             </Link>
+             <Link href="/login" className="hidden md:block text-xs font-bold px-4 py-2 hover:text-[#00ff88] transition-colors"><HyperText text="ĐĂNG NHẬP" /></Link>
              <Link href="/register">
                 <MagneticButton className="px-6 py-2.5 rounded-full bg-[#00ff88] text-black text-xs font-bold hover:bg-[#00cc6a] shadow-[0_0_20px_rgba(0,255,136,0.4)] flex items-center gap-2">
                    <HyperText text="MỞ TÀI KHOẢN" className="text-black" /> <ArrowRight size={14} />
@@ -116,7 +130,7 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* 4. HERO SECTION */}
+      {/* HERO SECTION */}
       <section className="relative z-10 w-full min-h-screen flex items-center pt-20 pb-20">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center w-full">
           
@@ -142,20 +156,22 @@ export default function LandingPage() {
 
             <div className="flex flex-col sm:flex-row items-center gap-5 w-full sm:w-auto justify-center lg:justify-start">
               <Link href="/register" className="w-full sm:w-auto">
-                 <MagneticButton className="w-full px-8 py-4 rounded-2xl bg-white text-black font-bold text-lg hover:scale-105 transition-all flex items-center justify-center gap-3 shadow-[0_0_40px_rgba(255,255,255,0.2)]">
+                 <MagneticButton className="w-full px-8 py-4 rounded-2xl bg-[#00ff88] text-black font-bold text-lg hover:scale-105 transition-all flex items-center justify-center gap-3 shadow-[0_0_40px_rgba(0,255,136,0.3)]">
                     <HyperText text="TRẠM CHỈ HUY" className="text-black" /> <Rocket size={20} />
                  </MagneticButton>
               </Link>
-              <button className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 backdrop-blur-md font-semibold flex items-center justify-center gap-3 transition-all group">
-                <PlayCircle size={20} className="group-hover:text-[#00ff88] transition-colors"/> <HyperText text="XEM DEMO" />
-              </button>
+              
+              {/* NÚT XEM DEMO CÓ SỰ KIỆN CLICK */}
+              <div onClick={() => setIsDemoOpen(true)} className="w-full sm:w-auto">
+                <MagneticButton className="w-full px-8 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 backdrop-blur-md font-semibold flex items-center justify-center gap-3 transition-all group text-white cursor-pointer">
+                  <PlayCircle size={20} className="group-hover:text-[#00ff88] transition-colors"/> <HyperText text="XEM DEMO" />
+                </MagneticButton>
+              </div>
+
             </div>
 
             <div className="pt-8 border-t border-white/10 flex justify-center lg:justify-start gap-12">
-               {[
-                 { val: 5000000, label: "Công dân", icon: Users },
-                 { val: 98000, label: "Hành tinh", icon: Globe },
-               ].map((stat, i) => (
+               {[{ val: 5000000, label: "Công dân", icon: Users }, { val: 98000, label: "Hành tinh", icon: Globe }].map((stat, i) => (
                  <div key={i} className="text-center lg:text-left">
                     <div className="text-3xl font-bold text-white flex items-center gap-2">
                        <stat.icon size={20} className="text-[#00ff88]" /> 
@@ -169,7 +185,6 @@ export default function LandingPage() {
             </div>
           </motion.div>
 
-          {/* HOLO DASHBOARD */}
           <div className="hidden lg:block relative z-10 perspective-1000">
              <FloatingElement duration={6} yOffset={20}>
                 <HoloDashboard />
@@ -177,21 +192,15 @@ export default function LandingPage() {
           </div>
         </div>
         
-        {/* SCROLL INDICATOR */}
-        <motion.div 
-          animate={{ y: [0, 10, 0], opacity: [0.5, 1, 0.5] }} 
-          transition={{ duration: 2, repeat: Infinity }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none"
-        >
+        <motion.div animate={{ y: [0, 10, 0], opacity: [0.5, 1, 0.5] }} transition={{ duration: 2, repeat: Infinity }} className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none">
           <div className="w-[1px] h-12 bg-gradient-to-b from-transparent via-[#00ff88] to-transparent"></div>
           <span className="text-[10px] font-mono text-[#00ff88]">SCROLL_DOWN</span>
         </motion.div>
       </section>
 
-      {/* 5. PARTNERS */}
       <PartnerMarquee />
 
-      {/* 6. FEATURES */}
+      {/* FEATURES */}
       <section id="Tính" className="relative z-10 py-32">
         <div className="max-w-7xl mx-auto px-6">
           <div className="mb-20 text-center">
@@ -203,16 +212,11 @@ export default function LandingPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[350px]">
             {/* Card 1 */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-              whileHover={{ y: -5 }} className="md:col-span-2"
-            >
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} whileHover={{ y: -5 }} className="md:col-span-2">
                <SpotlightCard className="h-full group" spotlightColor="rgba(79, 70, 229, 0.3)">
                  <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] opacity-50 pointer-events-none"></div>
                  <div className="relative h-full flex flex-col justify-between p-8">
-                    <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mb-4 text-indigo-400 border border-indigo-500/20">
-                       <Zap size={32} />
-                    </div>
+                    <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mb-4 text-indigo-400 border border-indigo-500/20"><Zap size={32} /></div>
                     <div>
                       <h3 className="text-3xl font-bold mb-3"><HyperText text="Warp Speed Transfer" /></h3>
                       <p className="text-gray-400 text-lg">Chuyển tiền siêu tốc độ ánh sáng. Xử lý hàng triệu giao dịch mỗi giây nhờ mạng lưới lượng tử phân tán.</p>
@@ -222,55 +226,42 @@ export default function LandingPage() {
             </motion.div>
 
             {/* Card 2 */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
-              whileHover={{ y: -5 }}
-            >
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} whileHover={{ y: -5 }}>
                <SpotlightCard className="h-full" spotlightColor="rgba(0, 255, 136, 0.3)">
                  <div className="p-8 h-full flex flex-col justify-between">
-                    <div className="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center text-[#00ff88] border border-green-500/20">
-                        <ShieldCheck size={28} />
-                    </div>
+                    <div className="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center text-[#00ff88] border border-green-500/20"><ShieldCheck size={28} /></div>
                     <div>
                       <h3 className="text-2xl font-bold mb-3"><HyperText text="Quantum Safe" /></h3>
-                      <p className="text-gray-400">Mã hóa đa lớp. Lá chắn năng lượng bảo vệ tài sản.</p>
+                      <p className="text-gray-400">Mã hóa đa lớp an toàn tuyệt đối. Lá chắn năng lượng bảo vệ tài sản.</p>
                     </div>
                  </div>
                </SpotlightCard>
             </motion.div>
 
             {/* Card 3 */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }}
-              whileHover={{ y: -5 }}
-            >
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} whileHover={{ y: -5 }}>
                <SpotlightCard className="h-full" spotlightColor="rgba(6, 182, 212, 0.3)">
                  <div className="p-8 h-full flex flex-col justify-between">
-                    <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 border border-cyan-500/20">
-                        <Globe size={28} />
-                    </div>
+                    <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 border border-cyan-500/20"><Globe size={28} /></div>
                     <div>
                       <h3 className="text-2xl font-bold mb-3"><HyperText text="Universal Pay" /></h3>
-                      <p className="text-gray-400">Thanh toán dịch vụ tại bất kỳ hành tinh nào trong liên minh.</p>
+                      <p className="text-gray-400">Thanh toán mọi nơi trong vũ trụ. Chuyển đổi tiền tệ tức thì.</p>
                     </div>
                  </div>
                </SpotlightCard>
             </motion.div>
 
-            {/* Card 4: VIRTUAL CARD */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 }}
-              whileHover={{ y: -5 }} className="md:col-span-2"
-            >
+            {/* Card 4 */}
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 }} whileHover={{ y: -5 }} className="md:col-span-2">
                <SpotlightCard className="h-full" spotlightColor="rgba(255, 255, 255, 0.2)">
                  <div className="flex flex-col md:flex-row items-center gap-10 h-full p-8">
                     <div className="flex-1">
                        <h3 className="text-3xl font-bold mb-3 text-white"><HyperText text="Thẻ Ảo Hologram" /></h3>
                        <p className="text-gray-400 mb-8 text-lg">Phát hành thẻ Visa ảo ngay lập tức. Tùy chỉnh màu sắc, hạn mức và đóng băng thẻ chỉ với một cú chạm.</p>
                        <Link href="/register">
-                          <button className="px-6 py-3 rounded-xl border border-[#00ff88] text-[#00ff88] font-bold hover:bg-[#00ff88] hover:text-black transition-all">
-                             PHÁT HÀNH NGAY
-                          </button>
+                          <MagneticButton className="px-6 py-3 rounded-xl border border-[#00ff88] text-[#00ff88] font-bold hover:bg-[#00ff88] hover:text-black transition-all">
+                             <HyperText text="PHÁT HÀNH NGAY" />
+                          </MagneticButton>
                        </Link>
                     </div>
                     <motion.div 
@@ -281,7 +272,6 @@ export default function LandingPage() {
                        
                        <div className="flex justify-between items-start relative z-10">
                           <div className="text-2xl font-bold italic text-white tracking-tighter">VISA</div>
-                          {/* --- ĐÃ THAY CPU BẰNG LOGO CỦA ANH Ở ĐÂY --- */}
                           <CosmicLogo size={40} />
                        </div>
                        
@@ -300,7 +290,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 7. APP SHOWCASE */}
+      {/* APP SHOWCASE */}
       <section id="Ứng" className="relative z-10 py-32 bg-gradient-to-b from-transparent to-black/80">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
            <motion.div 
