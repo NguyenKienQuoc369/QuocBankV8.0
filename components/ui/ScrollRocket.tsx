@@ -1,104 +1,109 @@
 'use client'
 
-import { motion, useScroll, useSpring, useTransform, useMotionValue, useAnimationFrame } from 'framer-motion'
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
 import Image from 'next/image'
 import { useRef } from 'react'
 
 export function ScrollRocket() {
   const { scrollYProgress } = useScroll()
-  const ref = useRef<HTMLDivElement>(null)
   
-  // 1. Y-AXIS MOVEMENT (Bay dọc)
-  // Làm mượt chuyển động, thêm độ trễ vật lý (mass cao hơn)
-  const smoothY = useSpring(scrollYProgress, {
-    stiffness: 80,
-    damping: 25,
+  // 1. LÀM MƯỢT CHUYỂN ĐỘNG
+  // Tăng damping để tên lửa có độ "đầm", không bị giật cục
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
     restDelta: 0.001
   })
-  // Map từ 0-1 sang vị trí trên màn hình (ví dụ: từ 10vh đến 85vh)
-  const yPosition = useTransform(smoothY, [0, 1], ['10vh', '85vh'])
 
-  // 2. X-AXIS DRIFT (Bay lượn ngang)
-  // Tạo hiệu ứng lượn sóng hình sin nhẹ sang trái phải khi bay xuống
-  const xDrift = useTransform(smoothY, (latest) => {
-    // latest là giá trị từ 0 đến 1. Nhân với Math.PI * 4 để tạo ra 2 chu kỳ sóng đầy đủ.
-    // Biên độ lượn là +/- 25px.
-    return Math.sin(latest * Math.PI * 4) * 25
-  })
+  // 2. TÍNH TOÁN QUỸ ĐẠO BAY (SLALOM)
+  // - Y: Chạy từ đỉnh (5vh) xuống đáy (90vh)
+  const yPosition = useTransform(smoothProgress, [0, 1], ['5vh', '95vh'])
   
-  // Góc nghiêng nhẹ theo hướng bay ngang cho chân thực
-  const rotateDrift = useTransform(xDrift, [-25, 25], [-10, 10])
+  // - X: Lượn hình sin qua lại giữa trái và phải màn hình
+  // Nhân với Math.PI * 6 để tạo ra 3 vòng lượn (qua trái, qua phải, qua trái...)
+  // Biên độ 40vw nghĩa là lượn ra gần sát mép màn hình (40% chiều rộng view)
+  const xPosition = useTransform(smoothProgress, (latest) => {
+    return Math.sin(latest * Math.PI * 6) * 450 // 450px biên độ
+  })
+
+  // 3. TÍNH GÓC NGHIÊNG (BANKING)
+  // Khi bay sang trái/phải, tên lửa phải nghiêng mình theo hướng đó
+  // Dùng Math.cos (đạo hàm của sin) để tính góc nghiêng chuẩn vật lý
+  const rotateZ = useTransform(smoothProgress, (latest) => {
+    return Math.cos(latest * Math.PI * 6) * -45 // Nghiêng tối đa 45 độ
+  })
 
   return (
-    <div ref={ref} className="fixed right-12 top-0 bottom-0 z-50 w-24 flex flex-col justify-center items-center pointer-events-none hidden md:flex">
+    // Đặt container ở CHÍNH GIỮA màn hình (left-1/2) để làm tâm lượn
+    <div className="fixed left-1/2 top-0 bottom-0 z-50 w-0 h-full pointer-events-none hidden md:block">
       
-      {/* CONTAINER CHÍNH CỦA TÊN LỬA (Di chuyển theo Y và X) */}
+      {/* KHỐI TÊN LỬA (Bay theo toạ độ tính toán) */}
       <motion.div 
         style={{ 
-          top: yPosition, 
-          x: xDrift,
-          rotateZ: rotateDrift
+          y: yPosition, 
+          x: xPosition,
+          rotateZ: rotateZ
         }}
-        className="absolute transform -translate-x-1/2 -translate-y-1/2 will-change-transform"
+        className="absolute w-24 h-24 -ml-12 -mt-12 flex items-center justify-center will-change-transform"
       >
         
-        {/* --- PHẦN ĐUÔI KHÓI (CONTRAIL) --- */}
-        {/* Nằm phía sau tên lửa (z-index thấp hơn trong stack context) */}
-        <div className="absolute bottom-[50%] left-1/2 -translate-x-1/2 w-full flex flex-col items-center">
-           {/* Lớp khói 1: Dài nhất, mờ nhất */}
-           <motion.div 
-             style={{ height: useTransform(smoothY, [0, 1], ['100px', '300px']) }}
-             className="w-10 bg-gradient-to-t from-[#00ff88]/0 via-[#00ff88]/20 to-[#00ff88]/40 blur-xl rounded-full origin-bottom -mb-10"
-           />
-           {/* Lớp khói 2: Ngắn hơn, đậm hơn */}
-           <motion.div 
-             style={{ height: useTransform(smoothY, [0, 1], ['50px', '150px']) }}
-             className="absolute bottom-0 w-6 bg-gradient-to-t from-[#00ff88]/0 via-[#00ff88]/40 to-[#00ff88]/70 blur-lg rounded-full origin-bottom -mb-6"
-           />
-           {/* Lớp khói 3: Lõi năng lượng sát đuôi */}
-           <div className="absolute bottom-0 w-2 h-20 bg-gradient-to-t from-transparent to-white/80 blur-md -mb-2"></div>
-        </div>
-
-
-        {/* --- PHẦN ĐỘNG CƠ PHUN LỬA (THRUSTER) --- */}
-        {/* Đã sửa hướng: Đặt ở phía trên (visual tail) và phun ngược lên */}
-        <div className="absolute bottom-[80%] left-1/2 -translate-x-1/2 rotate-180 z-10">
-           {/* Lõi lửa trắng */}
-           <motion.div 
-             animate={{ height: [15, 25, 15], opacity: [0.9, 1, 0.9] }}
-             transition={{ duration: 0.1, repeat: Infinity }}
-             className="w-1.5 bg-white rounded-full blur-[1px] mx-auto shadow-[0_0_10px_white]"
-           />
-           {/* Lửa xanh bao quanh */}
-           <motion.div 
-             animate={{ height: [25, 40, 25], width: [8, 12, 8], opacity: [0.6, 0.9, 0.6] }}
-             transition={{ duration: 0.15, repeat: Infinity }}
-             className="absolute top-0 left-1/2 -translate-x-1/2 bg-[#00ff88] rounded-full blur-sm"
-           />
-        </div>
-
-
-        {/* --- PHẦN THÂN TÊN LỬA (RUNG LẮC) --- */}
+        {/* --- HIỆU ỨNG RUNG LẮC (TURBULENCE) --- */}
+        {/* Mô phỏng động cơ đang nổ máy mạnh */}
         <motion.div
-           // Hiệu ứng rung lắc khi động cơ hoạt động
-           animate={{ x: [-1.5, 1.5, -1.5], y: [0.5, -0.5, 0.5] }}
-           transition={{ duration: 0.15, repeat: Infinity, ease: "linear" }}
-           className="relative z-20"
+           animate={{ x: [-1, 1, -1], y: [1, -1, 1] }}
+           transition={{ duration: 0.1, repeat: Infinity, ease: "linear" }}
+           className="relative"
         >
-           {/* Hào quang bảo vệ (Shield Glow) */}
-           <div className="absolute -inset-2 bg-[#00ff88] opacity-30 blur-xl rounded-full animate-pulse"></div>
+           {/* Hào quang khiên năng lượng (Shield) */}
+           <div className="absolute -inset-6 bg-[#00ff88] opacity-10 blur-2xl rounded-full"></div>
 
-           {/* HÌNH ẢNH TÊN LỬA PNG */}
-           {/* Đảm bảo bạn có file public/rocket.png */}
-           <div className="relative w-16 h-16 drop-shadow-[0_5px_15px_rgba(0,255,136,0.4)]">
+           {/* --- ĐỘNG CƠ PHUN LỬA (THRUSTER) --- */}
+           {/* Đặt ở đuôi tàu (phía trên vì tàu hướng xuống) */}
+           <div className="absolute bottom-[60%] left-1/2 -translate-x-1/2 rotate-180 z-0">
+              {/* Lõi lửa trắng cực nóng */}
+              <motion.div 
+                animate={{ height: [20, 40, 20], opacity: [0.9, 1, 0.9] }}
+                transition={{ duration: 0.05, repeat: Infinity }}
+                className="w-2 bg-white rounded-full blur-[2px] mx-auto shadow-[0_0_15px_white]"
+              />
+              {/* Lửa xanh bao quanh (Plasma) */}
+              <motion.div 
+                animate={{ height: [40, 70, 40], width: [10, 14, 10], opacity: [0.6, 0.8, 0.6] }}
+                transition={{ duration: 0.1, repeat: Infinity }}
+                className="absolute top-0 left-1/2 -translate-x-1/2 bg-[#00ff88] rounded-full blur-md"
+              />
+              {/* Tàn lửa bay ra (Particles) */}
+              <motion.div
+                animate={{ y: [0, -50], opacity: [1, 0] }}
+                transition={{ duration: 0.5, repeat: Infinity, ease: "easeOut" }}
+                className="absolute top-10 left-1/2 w-1 h-1 bg-white rounded-full"
+              />
+           </div>
+
+           {/* --- HÌNH ẢNH TÊN LỬA --- */}
+           {/* Đảm bảo file public/rocket.png tồn tại */}
+           <div className="relative z-10 w-20 h-20 drop-shadow-[0_10px_30px_rgba(0,255,136,0.3)]">
               <Image 
                 src="/rocket.png" 
                 alt="Spaceship" 
-                width={64} 
-                height={64} 
-                className="object-contain rotate-180" // Xoay 180 độ để đầu hướng xuống
+                width={80} 
+                height={80} 
+                className="object-contain rotate-180" // Xoay đầu hướng xuống
               />
            </div>
+
+           {/* Đèn tín hiệu nhấp nháy trên cánh (Navigation Lights) */}
+           <motion.div 
+             animate={{ opacity: [0, 1, 0] }}
+             transition={{ duration: 1, repeat: Infinity }}
+             className="absolute top-4 left-0 w-1.5 h-1.5 bg-red-500 rounded-full shadow-[0_0_5px_red]"
+           />
+           <motion.div 
+             animate={{ opacity: [0, 1, 0] }}
+             transition={{ duration: 1, repeat: Infinity, delay: 0.5 }}
+             className="absolute top-4 right-0 w-1.5 h-1.5 bg-green-500 rounded-full shadow-[0_0_5px_green]"
+           />
+
         </motion.div>
 
       </motion.div>
