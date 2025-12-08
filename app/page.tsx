@@ -107,7 +107,7 @@ export default function LandingPage() {
             <span className="font-bold tracking-widest text-lg">QUOC<span className="text-[#00ff88]">BANK</span></span>
           </Link>
           <div className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-gray-400">
-            {['Tính năng', 'Ứng dụng', 'Bảo mật'].map((item) => (
+            {['Tính năng', 'Ứng dụng', 'Đánh giá'].map((item) => (
               <a key={item} href={`#${item.split(" ")[0]}`} className="hover:text-white transition-colors relative group px-2 py-1">
                 <HyperText text={item} />
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#00ff88] transition-all group-hover:w-full"></span>
@@ -133,7 +133,7 @@ export default function LandingPage() {
             <FloatingElement duration={4}>
               <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-[#00ff88] backdrop-blur-md w-fit mx-auto lg:mx-0">
                 <span className="w-2 h-2 rounded-full bg-[#00ff88] animate-pulse"></span>
-                <HyperText text="SYSTEM_V2.0: ONLINE" />
+                <HyperText text="SYSTEM_V8.0: ONLINE" />
               </div>
             </FloatingElement>
 
@@ -152,7 +152,7 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row items-center gap-5 w-full sm:w-auto justify-center lg:justify-start">
               <Link href="/register" className="w-full sm:w-auto">
                  <MagneticButton className="w-full px-8 py-4 rounded-2xl bg-[#00ff88] text-black font-bold text-lg hover:scale-105 transition-all flex items-center justify-center gap-3 shadow-[0_0_40px_rgba(0,255,136,0.3)]">
-                    <HyperText text="TRẠM CHỈ HUY" className="text-black" /> <Rocket size={20} />
+                    <HyperText text="BẮT ĐẦU NGAY" className="text-black" /> <Rocket size={20} />
                  </MagneticButton>
               </Link>
               
@@ -371,7 +371,7 @@ export default function LandingPage() {
       {/* 9. FOOTER */}
       <footer className="relative z-10 bg-black pt-20 pb-10 px-6 border-t border-white/10">
           <div className="max-w-4xl mx-auto text-center mb-20">
-             <h2 className="text-5xl font-bold mb-6"><HyperText text="Sẵn sàng cất cánh?" /></h2>
+             <h2 className="text-5xl font-bold mb-6"><HyperText text="Sẵn sàng bắt đầu?" /></h2>
              <Link href="/register">
                <button className="px-10 py-4 bg-[#00ff88] text-black font-bold text-xl rounded-full hover:shadow-[0_0_50px_#00ff88] transition-all transform hover:scale-105">
                   <HyperText text="Mở Tài Khoản Ngay" className="text-black" />
@@ -386,7 +386,6 @@ export default function LandingPage() {
             </div>
             <div className="flex gap-6">
                <a href="#" className="hover:text-white">Điều khoản</a>
-               <a href="#" className="hover:text-white">Bảo mật</a>
                <a href="#" className="hover:text-white">Bản đồ sao</a>
             </div>
           </div>
