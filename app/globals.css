@@ -1,26 +1,59 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* --- ANIMATIONS --- */
+
+/* 1. Sao băng rơi (Meteor Shower) */
+@keyframes meteor {
+  0% { transform: rotate(215deg) translateX(0); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: rotate(215deg) translateX(-500px); opacity: 0; }
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* 2. Hố đen quay (Event Horizon) */
+@keyframes black-hole-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* 3. Sao lấp lánh chậm rãi */
+@keyframes pulse-star {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.7); }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* 4. Sóng xung kích (Shockwave) */
+@keyframes shockwave {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+.animate-meteor {
+  animation: meteor 5s linear infinite;
+}
+
+.animate-spin-slow {
+  animation: black-hole-spin 20s linear infinite;
+}
+
+.animate-pulse-star {
+  animation: pulse-star 4s ease-in-out infinite;
+}
+
+.animate-shockwave {
+  animation: shockwave 3s ease-out infinite;
+}
+
+/* Glassmorphism chuẩn tàu vũ trụ */
+.glass-cockpit {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+}
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
 }
