@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Globe, Zap, Database, Wifi, Shield, Cpu, 
   Activity, Lock, Server, BarChart3, Terminal, 
-  Radio, Share2, Hexagon, Fingerprint, Search, Command
+  Radio, Share2, Hexagon, Fingerprint, Search, Command, CheckCircle
 } from 'lucide-react'
 
 // --- 1. DỮ LIỆU CÔNG NGHỆ (DATA LAYER) ---
