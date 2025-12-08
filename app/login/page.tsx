@@ -26,7 +26,7 @@ import {
   Fingerprint, Scan, AlertTriangle, ArrowRight, 
   Cpu, Globe, ChevronRight, ChevronLeft, Terminal, Check,
   Eye, EyeOff, Keyboard, RefreshCw, Wifi, Battery, Signal,
-  Activity, Server, Database, XCircle, MapPin, Radio
+  Activity, Server, Database, XCircle, MapPin, Radio, Hexagon
 } from 'lucide-react'
 
 // =============================================================================
