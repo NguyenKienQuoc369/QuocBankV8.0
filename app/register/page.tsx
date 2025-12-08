@@ -1,114 +1,149 @@
 'use client'
 
-import React, { useState, useActionState, useEffect } from 'react'
+/**
+ * QUOCBANK INTERSTELLAR - RECRUITMENT TERMINAL (REGISTER V3.0)
+ * Architecture: Step-based Form + Realtime Validation + Holographic Feedback
+ * Security Level: Maximum
+ */
+
+import React, { useState, useActionState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
 import { register } from '@/app/actions/auth'
-// Đã thêm 'Globe' vào dòng import dưới đây
 import { 
   User, Mail, Lock, Loader2, Rocket, 
   CreditCard, ShieldCheck, CheckCircle2, 
-  Fingerprint, Scan, AlertTriangle, ArrowRight, Cpu, Globe 
+  Fingerprint, Scan, AlertTriangle, ArrowRight, 
+  Cpu, Globe, ChevronRight, ChevronLeft, Terminal, Check
 } from 'lucide-react'
 
-// --- 1. CONFIG ---
+// --- 1. CONFIG & TYPES ---
 const initialState = {
   message: '',
   error: '',
   success: false
 }
 
-// --- 2. SUB-COMPONENTS ---
+// Các bước đăng ký
+const STEPS = [
+  { id: 1, title: 'IDENTITY', desc: 'Xác lập danh tính chỉ huy' },
+  { id: 2, title: 'SECURITY', desc: 'Thiết lập mã khóa lượng tử' },
+  { id: 3, title: 'PROTOCOL', desc: 'Xác nhận điều khoản liên minh' }
+]
 
-// 2.1. Nền không gian (Particle)
+// --- 2. SUB-COMPONENTS (Thành phần giao diện chi tiết) ---
+
+// 2.1. Nền bụi không gian (Particle System)
 const SpaceParticles = () => (
-  <div className="absolute inset-0 overflow-hidden pointer-events-none">
-    {[...Array(30)].map((_, i) => (
+  <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+    {/* Grid nền */}
+    <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,136,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,136,0.03)_1px,transparent_1px)] bg-[size:60px_60px] opacity-30" />
+    
+    {/* Hạt trôi nổi */}
+    {[...Array(40)].map((_, i) => (
       <motion.div
         key={i}
         className="absolute bg-[#00ff88] rounded-full opacity-20"
         style={{
-          width: Math.random() * 3 + 1,
-          height: Math.random() * 3 + 1,
+          width: Math.random() * 2 + 1,
+          height: Math.random() * 2 + 1,
           left: Math.random() * 100 + '%',
           top: Math.random() * 100 + '%'
         }}
         animate={{
-          y: [0, -100],
-          opacity: [0, 0.5, 0]
+          y: [0, -1200], // Bay lên
+          opacity: [0, 0.8, 0]
         }}
         transition={{
-          duration: Math.random() * 5 + 5,
+          duration: Math.random() * 10 + 10,
           repeat: Infinity,
           ease: "linear",
-          delay: Math.random() * 5
+          delay: Math.random() * 10
         }}
       />
     ))}
   </div>
 )
 
-// 2.2. Thẻ ID Hologram 3D (Hiển thị thông tin Live)
-const HologramIDCard = ({ name, username }: { name: string, username: string }) => {
+// 2.2. Thẻ ID Hologram 3D (Live Preview)
+const HologramIDCard = ({ name, username, step }: { name: string, username: string, step: number }) => {
   return (
-    <div className="relative w-80 h-48 perspective-1000 group">
+    <div className="relative w-96 h-56 perspective-1000 group">
       <motion.div
-        className="w-full h-full bg-gradient-to-br from-black/80 to-[#004d29]/80 backdrop-blur-md border border-[#00ff88]/30 rounded-2xl p-6 relative overflow-hidden shadow-[0_0_30px_rgba(0,255,136,0.2)]"
-        animate={{ rotateY: [0, 5, 0, -5, 0], rotateX: [0, -5, 0, 5, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        className="w-full h-full bg-gradient-to-br from-[#0a0a0a] to-[#00331b] backdrop-blur-xl border border-[#00ff88]/40 rounded-2xl p-6 relative overflow-hidden shadow-[0_0_50px_rgba(0,255,136,0.15)]"
+        animate={{ rotateY: [0, 3, 0, -3, 0], rotateX: [0, -3, 0, 3, 0] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
       >
-        {/* Scan line quét qua thẻ */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-200%] animate-[shimmer_3s_infinite]" />
-        
-        {/* Chip & Logo */}
+        {/* Hiệu ứng quét thẻ */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-200%] animate-[shimmer_4s_infinite]" />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay" />
+
+        {/* Top Header */}
         <div className="flex justify-between items-start mb-8">
-           <div className="w-10 h-8 bg-yellow-500/20 rounded border border-yellow-500/50 flex items-center justify-center">
-              <Cpu size={16} className="text-yellow-500/80" />
-           </div>
-           <div className="text-right">
-              <div className="text-[10px] text-[#00ff88] font-mono tracking-widest">QUOCBANK</div>
-              <div className="text-[8px] text-gray-500 font-mono">INTERSTELLAR ID</div>
-           </div>
-        </div>
-
-        {/* Thông tin User */}
-        <div className="space-y-1">
-           <div className="text-[9px] text-gray-400 uppercase tracking-wider">COMMANDER NAME</div>
-           <div className="font-mono text-lg text-white font-bold tracking-wide truncate">
-              {name || "UNKNOWN"}
-           </div>
-        </div>
-
-        <div className="mt-4 flex justify-between items-end">
-           <div className="space-y-1">
-              <div className="text-[9px] text-gray-400 uppercase tracking-wider">CODENAME</div>
-              <div className="font-mono text-sm text-[#00ff88] truncate w-32">
-                 @{username || "..."}
+           <div className="flex items-center gap-3">
+              <div className="w-12 h-10 bg-yellow-500/10 rounded border border-yellow-500/40 flex items-center justify-center relative overflow-hidden">
+                 <div className="absolute inset-0 bg-yellow-500/20 animate-pulse"></div>
+                 <Cpu size={20} className="text-yellow-500 relative z-10" />
+              </div>
+              <div className="h-8 w-[1px] bg-white/10"></div>
+              <div>
+                 <div className="text-[8px] text-[#00ff88] font-mono tracking-widest mb-1">ACCESS LEVEL</div>
+                 <div className="flex gap-1">
+                    {[1,2,3,4,5].map(i => <div key={i} className={`w-1.5 h-3 rounded-sm ${i <= step + 2 ? 'bg-[#00ff88]' : 'bg-gray-800'}`} />)}
+                 </div>
               </div>
            </div>
-           <Fingerprint size={32} className="text-[#00ff88]/50" />
+           <div className="text-right">
+              <div className="text-[10px] text-[#00ff88] font-black tracking-widest">QUOCBANK</div>
+              <div className="text-[8px] text-gray-500 font-mono">INTERSTELLAR ALLIANCE</div>
+           </div>
         </div>
 
-        {/* Góc trang trí */}
-        <div className="absolute bottom-4 right-4 w-2 h-2 bg-[#00ff88] rounded-full animate-ping" />
+        {/* User Info */}
+        <div className="space-y-4 relative z-10">
+           <div>
+              <div className="text-[9px] text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-2">
+                 <User size={10} /> COMMANDER NAME
+              </div>
+              <div className="font-mono text-xl text-white font-bold tracking-wide truncate border-b border-white/10 pb-1">
+                 {name || "UNKNOWN_ENTITY"}
+              </div>
+           </div>
+
+           <div className="flex justify-between items-end">
+              <div>
+                 <div className="text-[9px] text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-2">
+                    <Terminal size={10} /> CODENAME
+                 </div>
+                 <div className="font-mono text-sm text-[#00ff88] truncate w-40 bg-[#00ff88]/5 px-2 py-1 rounded">
+                    @{username || "awaiting_input..."}
+                 </div>
+              </div>
+              <Fingerprint size={40} className="text-[#00ff88]/30 animate-pulse" strokeWidth={1} />
+           </div>
+        </div>
+
+        {/* Decorative elements */}
+        <div className="absolute bottom-4 right-4 w-2 h-2 bg-[#00ff88] rounded-full shadow-[0_0_10px_#00ff88] animate-ping" />
+        <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#00ff88]/10 to-transparent rounded-bl-full pointer-events-none" />
       </motion.div>
     </div>
   )
 }
 
-// 2.3. Cyber Input (Ô nhập liệu xịn)
-const CyberInput = ({ icon: Icon, type, name, placeholder, label, value, onChange, onFocus, onBlur, isFocused }: any) => (
-  <div className="space-y-1 group">
+// 2.3. Cyber Input (Ô nhập liệu có animation)
+const CyberInput = ({ icon: Icon, type, name, placeholder, label, value, onChange, onFocus, onBlur, isFocused, error }: any) => (
+  <div className="space-y-1 group relative">
     <div className="flex justify-between items-end px-1">
        <label className={`text-[10px] font-bold uppercase tracking-widest transition-colors ${isFocused ? 'text-[#00ff88]' : 'text-gray-500'}`}>
           {label}
        </label>
-       {isFocused && <span className="text-[9px] text-[#00ff88] font-mono animate-pulse">EDITING...</span>}
+       {error && <span className="text-[9px] text-red-500 font-bold animate-pulse">{error}</span>}
     </div>
     
     <div className="relative">
-       <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${isFocused ? 'text-[#00ff88]' : 'text-gray-500'}`}>
+       <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-300 ${isFocused ? 'text-[#00ff88]' : 'text-gray-600'}`}>
           <Icon size={18} />
        </div>
        <input 
@@ -118,237 +153,399 @@ const CyberInput = ({ icon: Icon, type, name, placeholder, label, value, onChang
           onChange={onChange}
           onFocus={onFocus}
           onBlur={onBlur}
-          required
           placeholder={placeholder}
-          className={`w-full bg-black/40 border-2 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none transition-all font-mono text-sm
-             ${isFocused 
-                ? 'border-[#00ff88]/50 shadow-[0_0_15px_rgba(0,255,136,0.1)] bg-[#00ff88]/5' 
-                : 'border-white/10 hover:border-white/20'
+          className={`w-full bg-black/40 border-2 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder-gray-700 focus:outline-none transition-all font-mono text-sm
+             ${error 
+                ? 'border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)]' 
+                : isFocused 
+                   ? 'border-[#00ff88]/50 shadow-[0_0_15px_rgba(0,255,136,0.1)] bg-[#00ff88]/5' 
+                   : 'border-white/10 hover:border-white/20'
              }
           `}
        />
-       {/* Góc vuông trang trí */}
+       
+       {/* Góc vuông trang trí (Reticle Corners) */}
        {isFocused && (
           <>
-             <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-[#00ff88]" />
-             <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-[#00ff88]" />
+             <motion.div layoutId="corner-tl" className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-[#00ff88]" />
+             <motion.div layoutId="corner-tr" className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-[#00ff88]" />
+             <motion.div layoutId="corner-br" className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-[#00ff88]" />
+             <motion.div layoutId="corner-bl" className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-[#00ff88]" />
           </>
        )}
     </div>
   </div>
 )
 
+// 2.4. Thanh đo độ mạnh mật khẩu (Password Strength Meter)
+const PasswordStrength = ({ password }: { password: string }) => {
+   if (!password) return null;
+   
+   let strength = 0;
+   if (password.length > 7) strength++;
+   if (password.match(/[A-Z]/)) strength++;
+   if (password.match(/[0-9]/)) strength++;
+   if (password.match(/[^A-Za-z0-9]/)) strength++;
+
+   const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-[#00ff88]'];
+   const texts = ['YẾU', 'TRUNG BÌNH', 'KHÁ', 'MẠNH'];
+
+   return (
+      <div className="mt-2 p-3 bg-white/5 rounded-lg border border-white/5">
+         <div className="flex justify-between text-[9px] text-gray-400 mb-1 font-mono uppercase">
+            <span>Bảo mật</span>
+            <span className={strength > 2 ? 'text-[#00ff88]' : 'text-gray-400'}>{texts[Math.min(strength, 3)]}</span>
+         </div>
+         <div className="flex gap-1 h-1.5">
+            {[0, 1, 2, 3].map((i) => (
+               <div 
+                  key={i} 
+                  className={`flex-1 rounded-full transition-all duration-500 ${i < strength ? colors[Math.min(strength - 1, 3)] : 'bg-gray-800'}`} 
+               />
+            ))}
+         </div>
+      </div>
+   )
+}
+
+// 2.5. Checkbox Điều khoản (Cyber Checkbox)
+const CyberCheckbox = ({ checked, onChange }: { checked: boolean, onChange: (v: boolean) => void }) => (
+   <div 
+      onClick={() => onChange(!checked)}
+      className={`group relative flex items-start gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer select-none
+         ${checked ? 'border-[#00ff88]/50 bg-[#00ff88]/5' : 'border-white/10 hover:border-white/30 bg-black/40'}
+      `}
+   >
+      <div className={`w-5 h-5 mt-0.5 rounded border flex items-center justify-center transition-all shrink-0
+         ${checked ? 'bg-[#00ff88] border-[#00ff88]' : 'border-gray-500 group-hover:border-white'}
+      `}>
+         {checked && <Check size={14} className="text-black" />}
+      </div>
+      <div className="text-sm text-gray-300">
+         Tôi xác nhận đã đọc và đồng ý tuân thủ <span className="text-[#00ff88] underline underline-offset-4 font-bold">Hiến Pháp Ngân Hàng Đa Vũ Trụ</span>. Tôi hiểu rằng mọi gian lận lượng tử sẽ bị xử lý theo luật liên bang thiên hà.
+      </div>
+      
+      {/* Glow effect */}
+      {checked && <div className="absolute inset-0 shadow-[0_0_30px_rgba(0,255,136,0.1)] rounded-xl pointer-events-none" />}
+   </div>
+)
+
 // --- 3. MAIN COMPONENT ---
 
 export default function RegisterPage() {
   const [state, formAction, isPending] = useActionState(register, initialState)
-  const [focusedField, setFocusedField] = useState<string | null>(null)
-  
-  // State lưu giá trị input để hiển thị lên Hologram Card
-  const [formData, setFormData] = useState({ fullName: '', username: '' })
-  
   const router = useRouter()
+  
+  // State quản lý Steps
+  const [currentStep, setCurrentStep] = useState(1)
+  
+  // State quản lý Form Data
+  const [formData, setFormData] = useState({ 
+     fullName: '', 
+     username: '', 
+     password: '', 
+     confirmPassword: '',
+     agreed: false
+  })
+  
+  const [focusedField, setFocusedField] = useState<string | null>(null)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
-  // Xử lý khi đăng ký thành công
+  // Xử lý chuyển hướng khi thành công
   useEffect(() => {
     if (state?.success) {
       const t = setTimeout(() => {
         router.push('/login?success=true')
-      }, 2500)
+      }, 3000)
       return () => clearTimeout(t)
     }
   }, [state?.success, router])
 
-  // Parallax Logic
+  // Parallax Effect
   const mouseX = useMotionValue(0)
   const mouseY = useMotionValue(0)
-  const rotateY = useTransform(mouseX, [-500, 500], [2, -2]) // Nghiêng nhẹ ngược chiều
+  const rotateY = useTransform(mouseX, [-500, 500], [3, -3])
+  const rotateX = useTransform(mouseY, [-500, 500], [-3, 3])
   
   const handleMouseMove = (e: React.MouseEvent) => {
     const rect = e.currentTarget.getBoundingClientRect()
-    const x = e.clientX - rect.left - rect.width / 2
-    const y = e.clientY - rect.top - rect.height / 2
-    mouseX.set(x)
-    mouseY.set(y)
+    mouseX.set(e.clientX - rect.left - rect.width / 2)
+    mouseY.set(e.clientY - rect.top - rect.height / 2)
   }
+
+  // Logic chuyển bước (Validation cơ bản)
+  const handleNextStep = () => {
+     const newErrors: Record<string, string> = {}
+     
+     if (currentStep === 1) {
+        if (!formData.fullName) newErrors.fullName = "Không được để trống"
+        if (!formData.username) newErrors.username = "Thiếu mã định danh"
+     } else if (currentStep === 2) {
+        if (formData.password.length < 6) newErrors.password = "Tối thiểu 6 ký tự"
+        if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Mật mã không khớp"
+     }
+
+     if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors)
+        return
+     }
+     
+     setErrors({})
+     setCurrentStep(prev => prev + 1)
+  }
+
+  const handlePrevStep = () => setCurrentStep(prev => prev - 1)
 
   return (
     <div 
-      className="min-h-screen w-full bg-black text-white flex items-center justify-center relative overflow-hidden font-sans selection:bg-[#00ff88] selection:text-black"
+      className="min-h-screen w-full bg-black text-white flex items-center justify-center relative overflow-hidden font-sans selection:bg-[#00ff88] selection:text-black perspective-1000"
       onMouseMove={handleMouseMove}
     >
-      {/* BACKGROUND */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#004d29]/30 via-black to-black z-0" />
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay z-0" />
+      {/* Background */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#004d29_0%,black_70%)] opacity-40 z-0" />
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-15 mix-blend-overlay z-0" />
       <SpaceParticles />
 
-      {/* MAIN CONTAINER */}
+      {/* Main Card */}
       <motion.div 
-        style={{ rotateY, transformStyle: "preserve-3d" }}
+        style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="relative z-10 w-full max-w-6xl min-h-[700px] bg-black/60 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-2"
+        className="relative z-10 w-full max-w-7xl min-h-[750px] bg-black/80 backdrop-blur-2xl border border-white/10 rounded-[3rem] shadow-[0_0_80px_rgba(0,255,136,0.1)] overflow-hidden grid grid-cols-1 lg:grid-cols-12 group"
       >
         
-        {/* --- CỘT TRÁI: FORM ĐĂNG KÝ (MAIN INPUT) --- */}
-        <div className="p-8 lg:p-16 flex flex-col justify-center relative border-b lg:border-b-0 lg:border-r border-white/10">
+        {/* --- CỘT TRÁI: FORM WIZARD (Chiếm 5 phần) --- */}
+        <div className="lg:col-span-5 p-8 lg:p-14 flex flex-col relative border-r border-white/5">
            
-           {/* Thành công View */}
-           <AnimatePresence mode='wait'>
-             {state?.success ? (
-               <motion.div 
-                 initial={{ opacity: 0, scale: 0.8 }}
-                 animate={{ opacity: 1, scale: 1 }}
-                 exit={{ opacity: 0 }}
-                 className="flex flex-col items-center text-center space-y-6"
-               >
-                 <div className="w-24 h-24 rounded-full bg-[#00ff88]/20 flex items-center justify-center border-2 border-[#00ff88]">
-                    <CheckCircle2 size={48} className="text-[#00ff88]" />
+           {/* Header */}
+           <div className="mb-10">
+              <Link href="/" className="inline-flex items-center gap-3 text-white/50 hover:text-white transition-colors mb-6 group/back">
+                 <div className="p-1 rounded-full border border-white/10 group-hover/back:border-[#00ff88] transition-colors">
+                    <ChevronLeft size={16} />
                  </div>
-                 <div>
-                    <h2 className="text-3xl font-bold text-white mb-2">HỒ SƠ ĐÃ DUYỆT</h2>
-                    <p className="text-gray-400">Đang khởi tạo ví lượng tử...</p>
+                 <span className="text-xs font-mono">QUAY LẠI TRẠM CHỈ HUY</span>
+              </Link>
+              <h1 className="text-4xl font-black mb-2 tracking-tight">KÍCH HOẠT HỒ SƠ</h1>
+              <p className="text-gray-400 text-sm">Hoàn tất 3 bước xác thực để gia nhập hạm đội.</p>
+           </div>
+
+           {/* Step Indicator */}
+           <div className="flex gap-2 mb-10">
+              {STEPS.map((s) => (
+                 <div key={s.id} className="flex-1">
+                    <div className={`h-1 rounded-full mb-2 transition-all duration-500 ${s.id <= currentStep ? 'bg-[#00ff88]' : 'bg-gray-800'}`} />
+                    <div className={`text-[10px] font-bold tracking-wider uppercase ${s.id === currentStep ? 'text-white' : 'text-gray-600'}`}>
+                       {s.title}
+                    </div>
                  </div>
-                 <div className="w-full bg-gray-800 h-1 rounded-full overflow-hidden mt-4">
+              ))}
+           </div>
+
+           {/* Form Container */}
+           <div className="flex-1 relative">
+              <AnimatePresence mode='wait'>
+                 {state?.success ? (
+                    // SUCCESS STATE
                     <motion.div 
-                       initial={{ width: 0 }} 
-                       animate={{ width: "100%" }} 
-                       transition={{ duration: 2 }} 
-                       className="h-full bg-[#00ff88]" 
-                    />
-                 </div>
-               </motion.div>
-             ) : (
-               // Form View
-               <motion.div
-                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                 className="w-full max-w-md mx-auto"
-               >
-                 <div className="mb-10">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#00ff88]/30 bg-[#00ff88]/10 text-[#00ff88] text-[10px] font-mono mb-4">
-                       <span className="w-2 h-2 rounded-full bg-[#00ff88] animate-pulse"></span>
-                       NEW RECRUIT
-                    </div>
-                    <h1 className="text-4xl font-bold mb-2">ĐĂNG KÝ</h1>
-                    <p className="text-gray-400">Thiết lập danh tính số của bạn trên mạng lưới liên ngân hà.</p>
-                 </div>
-
-                 <form action={formAction} className="space-y-6">
-                    <CyberInput 
-                       icon={User} label="HỌ VÀ TÊN" name="fullName" placeholder="NGUYEN VAN A"
-                       value={formData.fullName}
-                       onChange={(e: any) => setFormData({...formData, fullName: e.target.value})}
-                       isFocused={focusedField === 'fullName'}
-                       onFocus={() => setFocusedField('fullName')}
-                       onBlur={() => setFocusedField(null)}
-                    />
-                    
-                    <CyberInput 
-                       icon={Mail} label="MÃ ĐỊNH DANH (USERNAME)" name="username" placeholder="commander_01"
-                       value={formData.username}
-                       onChange={(e: any) => setFormData({...formData, username: e.target.value})}
-                       isFocused={focusedField === 'username'}
-                       onFocus={() => setFocusedField('username')}
-                       onBlur={() => setFocusedField(null)}
-                    />
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       <CyberInput 
-                          type="password" icon={Lock} label="MẬT MÃ" name="password" placeholder="••••••••"
-                          isFocused={focusedField === 'password'}
-                          onFocus={() => setFocusedField('password')}
-                          onBlur={() => setFocusedField(null)}
-                       />
-                       <CyberInput 
-                          type="password" icon={Lock} label="XÁC NHẬN" name="confirmPassword" placeholder="••••••••"
-                          isFocused={focusedField === 'confirmPassword'}
-                          onFocus={() => setFocusedField('confirmPassword')}
-                          onBlur={() => setFocusedField(null)}
-                       />
-                    </div>
-
-                    {/* Error Box */}
-                    <AnimatePresence>
-                       {state?.error && (
+                       key="success"
+                       initial={{ opacity: 0, y: 20 }}
+                       animate={{ opacity: 1, y: 0 }}
+                       className="absolute inset-0 flex flex-col items-center justify-center text-center space-y-6"
+                    >
+                       <div className="w-24 h-24 rounded-full bg-[#00ff88]/20 flex items-center justify-center border-2 border-[#00ff88] shadow-[0_0_40px_#00ff88]">
+                          <CheckCircle2 size={48} className="text-[#00ff88]" />
+                       </div>
+                       <div>
+                          <h2 className="text-2xl font-bold text-white mb-2">DANH TÍNH ĐÃ XÁC LẬP</h2>
+                          <p className="text-gray-400 text-sm">Đang khởi tạo ví lượng tử và điều hướng...</p>
+                       </div>
+                       <div className="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
                           <motion.div 
-                             initial={{ opacity: 0, height: 0 }} 
-                             animate={{ opacity: 1, height: 'auto' }}
-                             exit={{ opacity: 0, height: 0 }}
-                             className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-lg flex items-center gap-2"
+                             initial={{ width: 0 }} animate={{ width: "100%" }} transition={{ duration: 3 }} 
+                             className="h-full bg-[#00ff88]" 
+                          />
+                       </div>
+                    </motion.div>
+                 ) : (
+                    // FORM STEPS
+                    <form action={formAction} className="h-full flex flex-col">
+                       {/* STEP 1: IDENTITY */}
+                       {currentStep === 1 && (
+                          <motion.div 
+                             key="step1"
+                             initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
+                             className="space-y-6"
                           >
-                             <AlertTriangle size={14} /> {state.error}
+                             <CyberInput 
+                                icon={User} label="HỌ VÀ TÊN" name="fullName" placeholder="NGUYEN VAN A"
+                                value={formData.fullName}
+                                onChange={(e: any) => setFormData({...formData, fullName: e.target.value})}
+                                isFocused={focusedField === 'fullName'}
+                                onFocus={() => setFocusedField('fullName')}
+                                onBlur={() => setFocusedField(null)}
+                                error={errors.fullName}
+                             />
+                             <CyberInput 
+                                icon={Mail} label="MÃ ĐỊNH DANH (USERNAME)" name="username" placeholder="commander_01"
+                                value={formData.username}
+                                onChange={(e: any) => setFormData({...formData, username: e.target.value})}
+                                isFocused={focusedField === 'username'}
+                                onFocus={() => setFocusedField('username')}
+                                onBlur={() => setFocusedField(null)}
+                                error={errors.username}
+                             />
                           </motion.div>
                        )}
-                    </AnimatePresence>
 
-                    {/* Action Buttons */}
-                    <div className="pt-4 flex flex-col gap-4">
-                       <button 
-                          disabled={isPending}
-                          className="w-full py-4 bg-[#00ff88] hover:bg-[#00cc6a] text-black font-bold rounded-xl shadow-[0_0_20px_rgba(0,255,136,0.3)] transition-all active:scale-95 flex items-center justify-center gap-2 group relative overflow-hidden"
-                       >
-                          <div className="absolute inset-0 bg-white/30 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
-                          {isPending ? <Loader2 className="animate-spin" /> : <Rocket size={20} />}
-                          <span>{isPending ? 'ĐANG KHỞI TẠO...' : 'XÁC NHẬN GIA NHẬP'}</span>
-                       </button>
-                       
-                       <div className="text-center text-xs text-gray-500">
-                          Đã có tài khoản? <Link href="/login" className="text-[#00ff88] hover:underline">Đăng nhập</Link>
+                       {/* STEP 2: SECURITY */}
+                       {currentStep === 2 && (
+                          <motion.div 
+                             key="step2"
+                             initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
+                             className="space-y-6"
+                          >
+                             <CyberInput 
+                                type="password" icon={Lock} label="MẬT MÃ" name="password" placeholder="••••••••"
+                                value={formData.password}
+                                onChange={(e: any) => setFormData({...formData, password: e.target.value})}
+                                isFocused={focusedField === 'password'}
+                                onFocus={() => setFocusedField('password')}
+                                onBlur={() => setFocusedField(null)}
+                                error={errors.password}
+                             />
+                             <PasswordStrength password={formData.password} />
+                             
+                             <CyberInput 
+                                type="password" icon={Lock} label="XÁC NHẬN MẬT MÃ" name="confirmPassword" placeholder="••••••••"
+                                value={formData.confirmPassword}
+                                onChange={(e: any) => setFormData({...formData, confirmPassword: e.target.value})}
+                                isFocused={focusedField === 'confirmPassword'}
+                                onFocus={() => setFocusedField('confirmPassword')}
+                                onBlur={() => setFocusedField(null)}
+                                error={errors.confirmPassword}
+                             />
+                          </motion.div>
+                       )}
+
+                       {/* STEP 3: PROTOCOL (TERMS) */}
+                       {currentStep === 3 && (
+                          <motion.div 
+                             key="step3"
+                             initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
+                             className="space-y-6"
+                          >
+                             <div className="bg-white/5 p-4 rounded-xl border border-white/10 space-y-3">
+                                <div className="flex items-center gap-3 text-white">
+                                   <ShieldCheck size={20} className="text-[#00ff88]" />
+                                   <span className="font-bold text-sm">XÁC THỰC BẢO MẬT</span>
+                                </div>
+                                <div className="text-xs text-gray-400 leading-relaxed">
+                                   Tài khoản của bạn sẽ được bảo vệ bởi công nghệ mã hóa lượng tử 256-bit. Vui lòng xác nhận để kích hoạt Protocol Zero-Trust.
+                                </div>
+                             </div>
+
+                             {/* CUSTOM CHECKBOX */}
+                             <CyberCheckbox 
+                                checked={formData.agreed} 
+                                onChange={(val) => setFormData({...formData, agreed: val})} 
+                             />
+                             
+                             {state?.error && (
+                                <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-lg flex items-center gap-2">
+                                   <AlertTriangle size={14} /> {state.error}
+                                </div>
+                             )}
+
+                             {/* Hidden inputs to submit all data */}
+                             <input type="hidden" name="fullName" value={formData.fullName} />
+                             <input type="hidden" name="username" value={formData.username} />
+                             <input type="hidden" name="password" value={formData.password} />
+                          </motion.div>
+                       )}
+
+                       {/* NAVIGATION BUTTONS */}
+                       <div className="mt-auto pt-8 flex gap-4">
+                          {currentStep > 1 && (
+                             <button 
+                                type="button" onClick={handlePrevStep}
+                                className="px-6 py-4 rounded-xl border border-white/10 hover:bg-white/5 text-gray-400 font-bold transition-all"
+                             >
+                                QUAY LẠI
+                             </button>
+                          )}
+                          
+                          {currentStep < 3 ? (
+                             <button 
+                                type="button" onClick={handleNextStep}
+                                className="flex-1 py-4 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-all flex items-center justify-center gap-2 group"
+                             >
+                                TIẾP TỤC <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform"/>
+                             </button>
+                          ) : (
+                             <button 
+                                type="submit"
+                                disabled={isPending || !formData.agreed}
+                                className="flex-1 py-4 bg-[#00ff88] text-black font-bold rounded-xl hover:bg-[#00cc6a] transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(0,255,136,0.3)] disabled:opacity-50 disabled:shadow-none group relative overflow-hidden"
+                             >
+                                <div className="absolute inset-0 bg-white/40 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
+                                {isPending ? <Loader2 className="animate-spin" /> : <Rocket size={20} />}
+                                <span>KHỞI TẠO TÀI KHOẢN</span>
+                             </button>
+                          )}
                        </div>
-                    </div>
-                 </form>
-               </motion.div>
-             )}
-           </AnimatePresence>
+                    </form>
+                 )}
+              </AnimatePresence>
+           </div>
         </div>
 
-        {/* --- CỘT PHẢI: VISUALIZATION (HOLOGRAM PREVIEW) --- */}
-        <div className="hidden lg:flex flex-col justify-center items-center bg-[#050505] relative overflow-hidden p-12">
+        {/* --- CỘT PHẢI: VISUALIZATION (Chiếm 7 phần) --- */}
+        <div className="hidden lg:flex lg:col-span-7 bg-[#050505] flex-col justify-center items-center relative overflow-hidden p-12">
            
-           {/* Background Grid */}
+           {/* Grid nền */}
            <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,136,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,136,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
            
-           {/* Center Hologram */}
-           <div className="relative z-10 flex flex-col items-center gap-8">
-              <div className="text-center space-y-2">
-                 <div className="text-xs font-bold text-gray-500 tracking-[0.3em] uppercase">Identity Preview</div>
-                 <div className="text-[#00ff88] text-4xl font-mono animate-pulse">
-                    <Scan size={48} strokeWidth={1} />
+           {/* Center Visual */}
+           <div className="relative z-10 flex flex-col items-center">
+              
+              {/* Tiêu đề Visual thay đổi theo bước */}
+              <motion.div 
+                 key={currentStep}
+                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                 className="text-center mb-12"
+              >
+                 <div className="text-[#00ff88] text-5xl mb-4 flex justify-center">
+                    {currentStep === 1 && <Scan size={64} strokeWidth={1} />}
+                    {currentStep === 2 && <Lock size={64} strokeWidth={1} />}
+                    {currentStep === 3 && <ShieldCheck size={64} strokeWidth={1} />}
                  </div>
-              </div>
+                 <h3 className="text-2xl font-bold text-white tracking-widest uppercase">{STEPS[currentStep-1].title} MODULE</h3>
+                 <p className="text-gray-500 font-mono text-sm mt-2">{STEPS[currentStep-1].desc}</p>
+              </motion.div>
 
-              {/* THẺ HOLOGRAM XOAY 3D */}
+              {/* THẺ HOLOGRAM 3D (Luôn hiển thị để preview) */}
               <HologramIDCard 
                  name={formData.fullName.toUpperCase()} 
                  username={formData.username} 
+                 step={currentStep}
               />
 
-              {/* Features List */}
-              <div className="w-full max-w-xs space-y-3 mt-8">
-                 {[
-                    { icon: ShieldCheck, text: "Bảo mật sinh trắc học cấp 5" },
-                    { icon: CreditCard, text: "Thẻ Visa Infinite ảo tích hợp" },
-                    { icon: Globe, text: "Quyền công dân Đa Vũ Trụ" }
-                 ].map((item, i) => (
-                    <motion.div 
-                       key={i} 
-                       initial={{ x: 50, opacity: 0 }}
-                       animate={{ x: 0, opacity: 1 }}
-                       transition={{ delay: 0.5 + i * 0.2 }}
-                       className="flex items-center gap-3 text-xs text-gray-400 border-b border-white/5 pb-2"
-                    >
-                       <item.icon size={14} className="text-[#00ff88]" /> {item.text}
-                    </motion.div>
-                 ))}
+              {/* Decorative Tech Specs */}
+              <div className="mt-16 grid grid-cols-2 gap-12 text-center opacity-50">
+                 <div>
+                    <div className="text-[10px] text-gray-500 uppercase tracking-widest">ENCRYPTION</div>
+                    <div className="text-[#00ff88] font-mono text-xl">AES-256</div>
+                 </div>
+                 <div>
+                    <div className="text-[10px] text-gray-500 uppercase tracking-widest">SERVER NODE</div>
+                    <div className="text-[#00ff88] font-mono text-xl">ASIA-HK</div>
+                 </div>
               </div>
            </div>
 
-           {/* Decorative UI */}
-           <div className="absolute bottom-8 right-8 text-[10px] text-gray-600 font-mono text-right">
-              <div>SECURE_CHANNEL: ENCRYPTED</div>
-              <div>NODE: ALPHA_CENTAURI_09</div>
-           </div>
+           {/* Animated Rings */}
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border border-white/5 rounded-full animate-[spin_60s_linear_infinite]" />
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] border border-dashed border-white/10 rounded-full animate-[spin_40s_linear_infinite_reverse]" />
         </div>
 
       </motion.div>
