@@ -4,12 +4,15 @@ import { Canvas } from '@react-three/fiber'
 import { Stars, OrbitControls, Environment } from '@react-three/drei'
 import { Planet } from '@/components/3d/Planet' 
 import { Suspense } from 'react'
+// --- ĐÃ THÊM DÒNG NÀY ĐỂ SỬA LỖI ---
+import * as THREE from 'three' 
 
-// Component đường quỹ đạo (giữ nguyên)
+// Component đường quỹ đạo
 function OrbitPath({ radius }: { radius: number }) {
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]}>
       <ringGeometry args={[radius - 0.05, radius + 0.05, 128]} />
+      {/* Bây giờ THREE.DoubleSide đã hợp lệ */}
       <meshBasicMaterial color="#ffffff" transparent opacity={0.1} side={THREE.DoubleSide} />
     </mesh>
   )
@@ -18,7 +21,7 @@ function OrbitPath({ radius }: { radius: number }) {
 function SolarSystemScene() {
   const R_MERCURY = 14
   const R_VENUS = 20
-  const R_EARTH = 30  // Tăng khoảng cách một chút để đỡ dính chùm
+  const R_EARTH = 30
   const R_MARS = 40
   const R_JUPITER = 60
   const R_SATURN = 80
@@ -36,7 +39,7 @@ function SolarSystemScene() {
       <Stars radius={300} depth={100} count={5000} factor={4} saturation={0} fade speed={1} />
 
       {/* --- MẶT TRỜI --- */}
-      {/* Đã xóa SunGlow ở đây, Planet.tsx sẽ tự lo phần hào quang tròn */}
+      {/* Planet.tsx sẽ tự lo phần hào quang tròn (Spherical Glow) */}
       <Planet position={[0, 0, 0]} size={8} color="#FDB813" textureFile="sun.jpg" isSun={true} rotationSpeed={0.0005} />
 
       {/* --- CÁC HÀNH TINH --- */}
