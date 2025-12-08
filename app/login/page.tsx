@@ -1,185 +1,449 @@
 // app/login/page.tsx
 'use client'
 
-import { useState, useActionState, useEffect } from 'react' // Thêm useEffect
+import React, { useState, useActionState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation' // Thêm useRouter
-import { motion } from 'framer-motion'
-import { login } from '@/app/actions/auth' 
-import { WarpSpeed } from '@/components/ui/WarpSpeed' 
-import { CosmicBackground } from '@/components/ui/CosmicBackground' 
-import AuthOrb from '@/components/auth/AuthOrb'
-import { LogIn, Key, User, Loader2, ShieldCheck } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence, useSpring, useMotionValue, useTransform } from 'framer-motion'
+import { login } from '@/app/actions/auth'
+import { 
+  LogIn, Key, User, Loader2, ShieldCheck, 
+  Cpu, Zap, Globe, ScanFace, Lock, AlertTriangle, 
+  Terminal, Activity, CheckCircle
+} from 'lucide-react'
 
+// --- 1. CONFIG & UTILS ---
 const initialState = {
   message: '',
   error: '',
   success: false
 }
 
+// Hàm random số cho hiệu ứng Matrix
+const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1) + min)
+
+// --- 2. SUB-COMPONENTS (Thành phần con chi tiết) ---
+
+// 2.1. Nền Sao Băng & Bụi Vũ Trụ (Particle System)
+const StarField = () => {
+  // Tạo 50 ngôi sao ngẫu nhiên
+  const stars = Array.from({ length: 50 }).map((_, i) => ({
+    id: i,
+    x: randomInt(0, 100),
+    y: randomInt(0, 100),
+    size: Math.random() * 2 + 1,
+    duration: randomInt(3, 10),
+    delay: randomInt(0, 5)
+  }))
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {stars.map((star) => (
+        <motion.div
+          key={star.id}
+          className="absolute bg-white rounded-full opacity-0"
+          style={{
+            left: `${star.x}%`,
+            top: `${star.y}%`,
+            width: star.size,
+            height: star.size,
+          }}
+          animate={{
+            opacity: [0, 1, 0],
+            scale: [0.5, 1.5, 0.5],
+          }}
+          transition={{
+            duration: star.duration,
+            repeat: Infinity,
+            delay: star.delay,
+            ease: "easeInOut"
+          }}
+        />
+      ))}
+      {/* Sao băng */}
+      <motion.div 
+        className="absolute top-0 right-0 w-[300px] h-[1px] bg-gradient-to-l from-transparent via-cyan-400 to-transparent opacity-0"
+        animate={{ 
+          x: [-500, 1000], 
+          y: [0, 500], 
+          opacity: [0, 1, 0] 
+        }}
+        transition={{ duration: 7, repeat: Infinity, delay: 2, ease: "linear" }}
+        style={{ rotate: 45 }}
+      />
+    </div>
+  )
+}
+
+// 2.2. Lõi Lượng Tử (Quantum Core) - Thay thế AuthOrb cũ
+const QuantumCore = () => {
+  return (
+    <div className="relative w-64 h-64 flex items-center justify-center">
+      {/* Vòng ngoài cùng */}
+      <motion.div
+        className="absolute inset-0 border border-indigo-500/30 rounded-full border-dashed"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+      />
+      {/* Vòng giữa quay ngược */}
+      <motion.div
+        className="absolute inset-4 border-2 border-cyan-500/20 rounded-full"
+        style={{ borderTopColor: 'transparent', borderBottomColor: 'transparent' }}
+        animate={{ rotate: -360 }}
+        transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+      />
+      {/* Vòng trong cùng quay nhanh */}
+      <motion.div
+        className="absolute inset-10 border-4 border-indigo-400/10 rounded-full"
+        style={{ borderLeftColor: '#00ff88', borderRightColor: 'transparent' }}
+        animate={{ rotate: 360 }}
+        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+      />
+      {/* Lõi năng lượng */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <motion.div
+          className="w-24 h-24 bg-gradient-to-br from-indigo-600 to-cyan-500 rounded-full blur-xl opacity-50"
+          animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+          transition={{ duration: 4, repeat: Infinity }}
+        />
+        <div className="w-20 h-20 bg-black rounded-full border border-white/10 flex items-center justify-center relative z-10 shadow-[0_0_50px_rgba(79,70,229,0.5)]">
+           <Zap className="text-cyan-400 w-10 h-10 animate-pulse" />
+        </div>
+      </div>
+      
+      {/* Các vệ tinh quay quanh */}
+      <motion.div 
+        className="absolute w-full h-full"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+      >
+         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rounded-full shadow-[0_0_15px_white]" />
+      </motion.div>
+    </div>
+  )
+}
+
+// 2.3. Terminal Khởi động (System Boot Logs)
+const SystemBootLog = () => {
+  const [logs, setLogs] = useState<string[]>([])
+  const fullLogs = [
+    "Khởi tạo giao thức bảo mật...",
+    "Kết nối máy chủ vệ tinh V-9...",
+    "Đang xác thực chữ ký lượng tử...",
+    "Tải module giao diện người dùng...",
+    "Trạng thái: SẴN SÀNG."
+  ]
+
+  useEffect(() => {
+    let delay = 0
+    fullLogs.forEach((log, index) => {
+      delay += randomInt(300, 800)
+      setTimeout(() => {
+        setLogs(prev => [...prev, `> ${log}`])
+      }, delay)
+    })
+  }, [])
+
+  return (
+    <div className="font-mono text-[10px] text-green-500/80 p-4 h-32 overflow-hidden flex flex-col justify-end bg-black/40 rounded-lg border border-green-500/20 shadow-inner">
+      {logs.map((log, i) => (
+        <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
+          {log}
+        </motion.div>
+      ))}
+      <motion.span 
+        animate={{ opacity: [0, 1, 0] }} 
+        transition={{ duration: 0.5, repeat: Infinity }}
+        className="text-green-400"
+      >_</motion.span>
+    </div>
+  )
+}
+
+// 2.4. Cyber Input (Ô nhập liệu tương lai)
+const CyberInput = ({ icon: Icon, type, name, placeholder, onFocus, onBlur, isFocused }: any) => {
+  return (
+    <div className="relative group">
+      {/* Label hiệu ứng */}
+      <motion.label 
+        animate={{ 
+          color: isFocused ? '#00d4ff' : '#9ca3af',
+          y: isFocused ? -2 : 0
+        }}
+        className="text-xs font-bold uppercase tracking-widest ml-1 mb-1 block transition-colors"
+      >
+        {name === 'username' ? 'MÃ ĐỊNH DANH' : 'KHÓA TRUY CẬP'}
+      </motion.label>
+
+      <div className="relative">
+        {/* Icon bên trái */}
+        <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-300 ${isFocused ? 'text-cyan-400' : 'text-gray-500'}`}>
+          <Icon size={18} />
+        </div>
+
+        {/* Input chính */}
+        <input 
+          name={name} 
+          type={type} 
+          required
+          onFocus={onFocus}
+          onBlur={onBlur}
+          placeholder={placeholder}
+          className={`w-full bg-black/60 border-2 rounded-lg py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none transition-all duration-300 font-mono text-sm
+            ${isFocused ? 'border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.2)]' : 'border-white/10 hover:border-white/20'}
+          `}
+        />
+
+        {/* Thanh trạng thái bên phải */}
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-[2px]">
+           <div className={`w-1 h-1 rounded-full ${isFocused ? 'bg-green-500' : 'bg-gray-700'}`} />
+           <div className={`w-1 h-1 rounded-full ${isFocused ? 'bg-green-500' : 'bg-gray-700'}`} />
+           <div className={`w-1 h-1 rounded-full ${isFocused ? 'bg-green-500' : 'bg-gray-700'}`} />
+        </div>
+
+        {/* Đường kẻ quét (Scan line) khi focus */}
+        <AnimatePresence>
+          {isFocused && (
+            <motion.div 
+              initial={{ width: '0%' }}
+              animate={{ width: '100%' }}
+              exit={{ width: '0%', opacity: 0 }}
+              className="absolute bottom-0 left-0 h-[2px] bg-cyan-400 shadow-[0_0_10px_#00d4ff]"
+            />
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  )
+}
+
+// --- 3. MAIN PAGE COMPONENT ---
+
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(login, initialState)
-  const [isFocused, setIsFocused] = useState<string | null>(null)
-  const router = useRouter() // Hook điều hướng
+  const [focusedField, setFocusedField] = useState<string | null>(null)
+  const [isBooting, setIsBooting] = useState(true) // State khởi động
+  const router = useRouter()
 
-  // --- PHẦN BỔ SUNG QUAN TRỌNG ---
-  // Lắng nghe trạng thái thành công để chuyển hướng
+  // Parallax Effect Logic
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
+  const rotateX = useTransform(mouseY, [-500, 500], [5, -5]) // Nghiêng X
+  const rotateY = useTransform(mouseX, [-500, 500], [-5, 5]) // Nghiêng Y
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX - rect.left - rect.width / 2
+    const y = e.clientY - rect.top - rect.height / 2
+    mouseX.set(x)
+    mouseY.set(y)
+  }
+
+  // Kết thúc quá trình boot sau 2 giây
+  useEffect(() => {
+    const timer = setTimeout(() => setIsBooting(false), 2200)
+    return () => clearTimeout(timer)
+  }, [])
+
+  // Xử lý login thành công
   useEffect(() => {
     if (state?.success) {
-      // Chuyển hướng ngay lập tức hoặc chờ 1 xíu để hiện hiệu ứng
-      router.refresh() // Làm mới cache router
+      router.refresh()
       router.push('/dashboard') 
     }
   }, [state?.success, router])
-  // --------------------------------
 
   return (
-    <div className="min-h-screen w-full bg-black text-white flex items-center justify-center relative overflow-hidden font-sans">
-      {/* Background Layer */}
-      <div className="absolute inset-0 z-0">
-        <WarpSpeed active={true} />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-80" />
-      </div>
+    <div 
+      className="min-h-screen w-full bg-black text-white flex items-center justify-center relative overflow-hidden font-sans selection:bg-cyan-500 selection:text-black perspective-1000"
+      onMouseMove={handleMouseMove}
+    >
+      {/* --- BACKGROUND LAYERS --- */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/20 via-black to-black z-0" />
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-15 mix-blend-overlay z-0" />
+      <StarField />
 
-      {/* Main Container */}
+      {/* --- MAIN CARD (PARALLAX CONTAINER) --- */}
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="relative z-10 w-full max-w-5xl h-[600px] grid grid-cols-1 lg:grid-cols-2 rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(79,70,229,0.3)] bg-black/40 backdrop-blur-xl"
+        className="relative z-10 w-full max-w-6xl h-[700px] bg-black/60 backdrop-blur-2xl rounded-[2rem] border border-white/10 shadow-[0_0_100px_rgba(79,70,229,0.2)] overflow-hidden flex flex-col lg:flex-row group"
       >
-        
-        {/* Cột trái: Artwork 3D */}
-        <div className="hidden lg:flex flex-col justify-between p-12 relative overflow-hidden bg-gradient-to-br from-indigo-900/40 to-black">
-          <AuthOrb color="#4f46e5" /> 
+        {/* Glow effect chạy quanh viền */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+           <div className="absolute top-0 left-1/4 w-1/2 h-[1px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50" />
+           <div className="absolute bottom-0 left-1/4 w-1/2 h-[1px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50" />
+        </div>
+
+        {/* ================= CỘT TRÁI: VISUAL ARTWORK ================= */}
+        <div className="hidden lg:flex w-5/12 bg-white/5 relative flex-col justify-between p-12 border-r border-white/5 overflow-hidden">
+          {/* Background Grid bên trái */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
           
+          {/* Logo & Brand */}
           <div className="relative z-10">
-            <motion.div 
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="flex items-center gap-3 mb-6"
-            >
-              <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center font-bold text-xl shadow-[0_0_15px_#4f46e5]">Q</div>
-              <span className="text-2xl font-bold tracking-widest">QUOC<span className="text-indigo-400">BANK</span></span>
-            </motion.div>
-            
-            <motion.h1 
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="text-5xl font-bold leading-tight mb-4"
-            >
-              Truy Cập <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">
-                Trung Tâm Chỉ Huy
-              </span>
-            </motion.h1>
-            <p className="text-gray-400 text-lg max-w-sm">
-              Hệ thống tài chính lượng tử an toàn nhất dải ngân hà. Đăng nhập để quản lý tài sản số của bạn.
-            </p>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-600 to-cyan-600 flex items-center justify-center font-bold text-white shadow-lg">Q</div>
+              <span className="text-2xl font-bold tracking-[0.2em]">QUOC<span className="text-cyan-400">BANK</span></span>
+            </div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-green-500/30 bg-green-500/10 text-green-400 text-xs font-mono">
+               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" /> SYSTEM SECURE
+            </div>
           </div>
 
-          <div className="relative z-10 flex items-center gap-4 text-sm text-gray-500">
-            <div className="flex items-center gap-2">
-              <ShieldCheck size={16} className="text-[#00ff88]" />
-              <span>Mã hóa lượng tử 256-bit</span>
-            </div>
-            <div className="w-1 h-1 bg-gray-500 rounded-full" />
-            <span>Ver 2.0.4</span>
+          {/* Center Visual (Quantum Core) */}
+          <div className="relative z-10 flex flex-col items-center">
+             <QuantumCore />
+             <motion.p 
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               transition={{ delay: 1 }}
+               className="mt-8 text-center text-gray-400 text-sm max-w-xs leading-relaxed"
+             >
+               Cổng kết nối đến mạng lưới tài chính đa chiều. Vui lòng xác thực danh tính để truy cập khoang điều khiển.
+             </motion.p>
+          </div>
+
+          {/* System Terminal (Bottom Left) */}
+          <div className="relative z-10">
+             <SystemBootLog />
           </div>
         </div>
 
-        {/* Cột phải: Form Đăng nhập */}
-        <div className="flex items-center justify-center p-8 lg:p-12 bg-white/5 relative">
-          <div className="w-full max-w-md space-y-8">
-            <div className="text-center lg:text-left">
-              <h2 className="text-2xl font-bold mb-2 lg:hidden">Đăng Nhập</h2>
-              <p className="text-gray-400">Nhập thông tin xác thực phi hành đoàn.</p>
+        {/* ================= CỘT PHẢI: LOGIN FORM ================= */}
+        <div className="flex-1 flex items-center justify-center p-8 lg:p-16 relative">
+          
+          {/* Hình nền mờ logo */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none">
+             <Globe size={400} />
+          </div>
+
+          {/* Form Container */}
+          <div className="w-full max-w-md relative z-10">
+            
+            {/* Header Form */}
+            <div className="mb-10 text-center lg:text-left">
+              <h2 className="text-4xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">
+                CHÀO MỪNG TRỞ LẠI
+              </h2>
+              <p className="text-gray-400">Nhập thông tin xác thực để mở khóa hệ thống.</p>
             </div>
 
-            <form action={formAction} className="space-y-6">
-              {/* Username Input */}
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">Mã định danh</label>
-                <div className={`group relative flex items-center transition-all duration-300 ${isFocused === 'username' ? 'scale-[1.02]' : ''}`}>
-                  <div className="absolute left-4 text-gray-400 group-focus-within:text-indigo-400 transition-colors">
-                    <User size={20} />
-                  </div>
-                  <input 
-                    name="username" 
-                    type="text" 
-                    required
-                    onFocus={() => setIsFocused('username')}
-                    onBlur={() => setIsFocused(null)}
-                    placeholder="Tên đăng nhập"
-                    className="w-full bg-black/50 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 focus:bg-indigo-500/10 transition-all shadow-inner"
-                  />
-                  <div className={`absolute inset-0 rounded-xl transition-opacity duration-300 pointer-events-none ${isFocused === 'username' ? 'opacity-100 shadow-[0_0_20px_rgba(79,70,229,0.3)]' : 'opacity-0'}`} />
-                </div>
+            {isBooting ? (
+              // Màn hình chờ Booting giả lập (Loading ban đầu)
+              <div className="h-[300px] flex flex-col items-center justify-center space-y-4">
+                 <Loader2 size={48} className="text-cyan-400 animate-spin" />
+                 <div className="text-xs font-mono text-cyan-400 animate-pulse">LOADING SECURITY MODULES...</div>
+                 <div className="w-48 h-1 bg-gray-800 rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }} animate={{ width: "100%" }} transition={{ duration: 2 }} 
+                      className="h-full bg-cyan-400" 
+                    />
+                 </div>
               </div>
+            ) : (
+              // Form chính thức
+              <form action={formAction} className="space-y-6">
+                
+                <CyberInput 
+                  name="username" 
+                  type="text" 
+                  placeholder="Commander ID" 
+                  icon={User}
+                  isFocused={focusedField === 'username'}
+                  onFocus={() => setFocusedField('username')}
+                  onBlur={() => setFocusedField(null)}
+                />
 
-              {/* Password Input */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center ml-1">
-                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Mật mã</label>
-                </div>
-                <div className={`group relative flex items-center transition-all duration-300 ${isFocused === 'password' ? 'scale-[1.02]' : ''}`}>
-                  <div className="absolute left-4 text-gray-400 group-focus-within:text-indigo-400 transition-colors">
-                    <Key size={20} />
-                  </div>
-                  <input 
-                    name="password" 
-                    type="password" 
-                    required
-                    onFocus={() => setIsFocused('password')}
-                    onBlur={() => setIsFocused(null)}
-                    placeholder="••••••••"
-                    className="w-full bg-black/50 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 focus:bg-indigo-500/10 transition-all shadow-inner"
-                  />
-                  <div className={`absolute inset-0 rounded-xl transition-opacity duration-300 pointer-events-none ${isFocused === 'password' ? 'opacity-100 shadow-[0_0_20px_rgba(79,70,229,0.3)]' : 'opacity-0'}`} />
-                </div>
-              </div>
+                <CyberInput 
+                  name="password" 
+                  type="password" 
+                  placeholder="••••••••••••" 
+                  icon={Key}
+                  isFocused={focusedField === 'password'}
+                  onFocus={() => setFocusedField('password')}
+                  onBlur={() => setFocusedField(null)}
+                />
 
-              {/* Error Message */}
-              {state?.error && (
-                <motion.div 
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded-lg flex items-center gap-2"
+                <div className="flex justify-between items-center text-xs text-gray-500">
+                   <label className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors">
+                      <input type="checkbox" className="rounded bg-gray-800 border-gray-700 text-cyan-500 focus:ring-0" />
+                      Ghi nhớ phiên đăng nhập
+                   </label>
+                   <a href="#" className="hover:text-cyan-400 transition-colors">Quên mật mã?</a>
+                </div>
+
+                {/* Error Message Area */}
+                <AnimatePresence>
+                  {state?.error && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0, y: -10 }}
+                      animate={{ opacity: 1, height: 'auto', y: 0 }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-center gap-3 overflow-hidden"
+                    >
+                      <AlertTriangle size={18} className="text-red-500 shrink-0" />
+                      <span className="text-sm text-red-400">{state.error}</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Submit Button (Nút Kích Hoạt) */}
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  disabled={isPending || state?.success}
+                  className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-3 relative overflow-hidden group transition-all duration-300
+                    ${isPending || state?.success 
+                      ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700' 
+                      : 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white hover:shadow-[0_0_30px_rgba(6,182,212,0.4)] border border-white/10'
+                    }
+                  `}
                 >
-                  <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                  {state.error}
-                </motion.div>
-              )}
+                  {/* Hiệu ứng quét sáng qua nút */}
+                  {!isPending && !state?.success && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                  )}
 
-              {/* Submit Button */}
-              <button 
-                disabled={isPending || state?.success}
-                className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.4)] hover:shadow-[0_0_30px_rgba(79,70,229,0.6)] transition-all transform active:scale-95 disabled:opacity-50 disabled:scale-100 flex items-center justify-center gap-2 relative overflow-hidden group"
-              >
-                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                {isPending || state?.success ? (
-                  <>
-                    <Loader2 className="animate-spin" size={20} /> {state?.success ? 'Đang chuyển hướng...' : 'Đang xác thực...'}
-                  </>
-                ) : (
-                  <>
-                    <LogIn size={20} /> Kích Hoạt Kết Nối
-                  </>
-                )}
-              </button>
-            </form>
+                  {isPending || state?.success ? (
+                    <>
+                      {state?.success ? <CheckCircle className="text-green-500" /> : <ScanFace className="animate-pulse" />}
+                      <span className="font-mono">{state?.success ? 'ACCESS GRANTED' : 'VERIFYING BIOMETRICS...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <LogIn size={20} /> TRUY CẬP HỆ THỐNG
+                    </>
+                  )}
+                </motion.button>
 
-            <div className="text-center text-gray-400 text-sm">
-              Chưa có tài khoản?{' '}
-              <Link href="/register" className="text-white font-semibold hover:text-indigo-400 hover:underline transition-colors">
-                Đăng ký thành viên mới
-              </Link>
-            </div>
+                {/* Footer Link */}
+                <div className="text-center pt-4">
+                   <p className="text-gray-500 text-sm">
+                      Chưa có mã định danh?{' '}
+                      <Link href="/register" className="text-cyan-400 hover:text-cyan-300 font-semibold hover:underline decoration-cyan-500/50 underline-offset-4 transition-all">
+                         Đăng ký thành viên mới
+                      </Link>
+                   </p>
+                </div>
+
+              </form>
+            )}
           </div>
         </div>
       </motion.div>
+
+      {/* Decorative Corner Elements (HUD UI) */}
+      <div className="absolute top-10 left-10 w-20 h-20 border-l-2 border-t-2 border-white/20 rounded-tl-3xl pointer-events-none hidden lg:block"></div>
+      <div className="absolute bottom-10 right-10 w-20 h-20 border-r-2 border-b-2 border-white/20 rounded-br-3xl pointer-events-none hidden lg:block"></div>
+      
+      <div className="absolute bottom-8 left-8 text-[10px] font-mono text-gray-600 hidden lg:block">
+         <div>SECURE SERVER: NODE_ALPHA_01</div>
+         <div>ENCRYPTION: AES-256-GCM</div>
+      </div>
+
     </div>
   )
 }
