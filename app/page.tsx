@@ -83,12 +83,7 @@ export default function LandingPage() {
               <X size={32} />
             </button>
 
-            {/* Tiêu đề Modal */}
-            <div className="absolute top-10 z-40 text-center">
-               <h2 className="text-3xl font-bold mb-2"><HyperText text="HỆ THỐNG CÔNG NGHỆ" /></h2>
-               <p className="text-gray-500">Mạng lưới vận hành QuocBank Interstellar</p>
-            </div>
-
+        
             {/* Nội dung chính: Tech Universe */}
             <TechUniverse />
             
