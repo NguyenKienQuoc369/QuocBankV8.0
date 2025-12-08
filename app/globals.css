@@ -1,8 +1,94 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-/* --- ANIMATIONS --- */
+@theme {
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  /* Custom Animations */
+  --animate-meteor: meteor 5s linear infinite;
+  --animate-spin-slow: black-hole-spin 20s linear infinite;
+  --animate-pulse-star: pulse-star 4s ease-in-out infinite;
+  --animate-shockwave: shockwave 3s ease-out infinite;
+  --animate-scan: scan 2s linear infinite;
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
+
+:root {
+  /* Cosmic Theme Variables */
+  --background: #050505; /* Deep Space Black */
+  --foreground: #e0e0e0; /* Starlight White */
+
+  --card: #0a0a0a; /* Dark Matter */
+  --card-foreground: #e0e0e0;
+
+  --popover: #0a0a0a;
+  --popover-foreground: #e0e0e0;
+
+  --primary: #00ff88; /* Neon Green / Quantum Energy */
+  --primary-foreground: #000000;
+
+  --secondary: #1a1a2e; /* Deep Space Blue */
+  --secondary-foreground: #ffffff;
+
+  --muted: #1f2937;
+  --muted-foreground: #9ca3af;
+
+  --accent: #00d4ff; /* Cyan / Plasma */
+  --accent-foreground: #000000;
+
+  --destructive: #ef4444; /* Red Dwarf */
+  --destructive-foreground: #ffffff;
+
+  --border: #333333;
+  --input: #1f2937;
+  --ring: #00ff88;
+
+  --radius: 0.75rem;
+}
+
+/* --- VŨ TRỤ ANIMATIONS --- */
 
 /* 1. Sao băng rơi (Meteor Shower) */
 @keyframes meteor {
@@ -29,20 +115,9 @@
   100% { transform: scale(2); opacity: 0; }
 }
 
-.animate-meteor {
-  animation: meteor 5s linear infinite;
-}
-
-.animate-spin-slow {
-  animation: black-hole-spin 20s linear infinite;
-}
-
-.animate-pulse-star {
-  animation: pulse-star 4s ease-in-out infinite;
-}
-
-.animate-shockwave {
-  animation: shockwave 3s ease-out infinite;
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
 }
 
 /* Glassmorphism chuẩn tàu vũ trụ */
@@ -53,7 +128,12 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
 }
-@keyframes scan {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100%); }
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
