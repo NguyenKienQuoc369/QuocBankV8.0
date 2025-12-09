@@ -41,7 +41,7 @@ import {
   Share2, Hexagon, Fingerprint, Command, Scan,
   BarChart3, PieChart, TrendingUp, AlertTriangle, Search,
   Maximize2, Minimize2, Grid, Layers, Box, Loader2, Power, Shield
-} from 'lucide-react'
+} from 'lucide-reaApplication error: a client-side exception has occurred while loading quoc-bank-v8-0-jx8bb76mf-nguyenkienquocs-projects.vercel.app (see the browser console for more information).ct'
 
 // =============================================================================
 // SECTION 2: DATA & CONSTANTS
