@@ -278,12 +278,12 @@ export default function LoginPage() {
         </div>
 
         {/* ================= CỘT TRÁI: VISUAL ARTWORK ================= */}
-        <div className="hidden lg:flex w-5/12 bg-white/5 relative flex-col justify-between p-12 border-r border-white/5 overflow-hidden">
+        <div className="hidden lg:flex w-5/12 bg-white/5 relative flex-col p-12 border-r border-white/5 overflow-hidden">
           {/* Background Grid bên trái */}
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
           
           {/* Logo & Brand */}
-          <div className="relative z-10">
+          <div className="relative z-10 flex-shrink-0">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-600 to-cyan-600 flex items-center justify-center font-bold text-white shadow-lg">Q</div>
               <span className="text-2xl font-bold tracking-[0.2em]">QUOC<span className="text-cyan-400">BANK</span></span>
@@ -294,7 +294,7 @@ export default function LoginPage() {
           </div>
 
           {/* Center Visual (Quantum Core) */}
-          <div className="relative z-10 flex flex-col items-center">
+          <div className="relative z-10 flex-1 flex flex-col items-center justify-center">
              <QuantumCore />
              <motion.p 
                initial={{ opacity: 0 }}
@@ -307,7 +307,7 @@ export default function LoginPage() {
           </div>
 
           {/* System Terminal (Bottom Left) */}
-          <div className="relative z-10">
+          <div className="relative z-10 flex-shrink-0">
              <SystemBootLog />
           </div>
         </div>
