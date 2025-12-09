@@ -10,9 +10,7 @@ export function TextDecode({ text, className = "" }: { text: string, className?:
   
   useEffect(() => {
     let iteration = 0
-    let interval: NodeJS.Timeout
-
-    interval = setInterval(() => {
+    const interval = window.setInterval(() => {
       setDisplay(prev => 
         text.split("").map((letter, index) => {
           if (index < iteration) return text[index]

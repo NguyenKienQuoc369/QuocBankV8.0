@@ -1,4 +1,5 @@
 'use client'
+export const dynamic = 'force-dynamic'
 
 /**
  * QUOCBANK INTERSTELLAR - RECRUITMENT TERMINAL (REGISTER V3.0)
@@ -35,36 +36,51 @@ const STEPS = [
 // --- 2. SUB-COMPONENTS (Thành phần giao diện chi tiết) ---
 
 // 2.1. Nền bụi không gian (Particle System)
-const SpaceParticles = () => (
-  <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-    {/* Grid nền */}
-    <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,136,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,136,0.03)_1px,transparent_1px)] bg-[size:60px_60px] opacity-30" />
-    
-    {/* Hạt trôi nổi */}
-    {[...Array(40)].map((_, i) => (
-      <motion.div
-        key={i}
-        className="absolute bg-[#00ff88] rounded-full opacity-20"
-        style={{
-          width: Math.random() * 2 + 1,
-          height: Math.random() * 2 + 1,
-          left: Math.random() * 100 + '%',
-          top: Math.random() * 100 + '%'
-        }}
-        animate={{
-          y: [0, -1200], // Bay lên
-          opacity: [0, 0.8, 0]
-        }}
-        transition={{
-          duration: Math.random() * 10 + 10,
-          repeat: Infinity,
-          ease: "linear",
-          delay: Math.random() * 10
-        }}
-      />
-    ))}
-  </div>
-)
+const SpaceParticles = () => {
+   const [particles, setParticles] = useState<Array<{w:number;h:number;left:string;top:string;duration:number;delay:number}>>([])
+
+   useEffect(() => {
+      const list = Array.from({ length: 40 }).map(() => ({
+         w: Math.random() * 2 + 1,
+         h: Math.random() * 2 + 1,
+         left: Math.random() * 100 + '%',
+         top: Math.random() * 100 + '%',
+         duration: Math.random() * 10 + 10,
+         delay: Math.random() * 10
+      }))
+      const raf = requestAnimationFrame(() => setParticles(list))
+      return () => cancelAnimationFrame(raf)
+   }, [])
+
+   return (
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+         {/* Grid nền */}
+         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,136,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,136,0.03)_1px,transparent_1px)] bg-[size:60px_60px] opacity-30" />
+         {particles.map((p, i) => (
+            <motion.div
+               key={i}
+               className="absolute bg-[#00ff88] rounded-full opacity-20"
+               style={{
+                  width: p.w,
+                  height: p.h,
+                  left: p.left,
+                  top: p.top
+               }}
+               animate={{
+                  y: [0, -1200], // Bay lên
+                  opacity: [0, 0.8, 0]
+               }}
+               transition={{
+                  duration: p.duration,
+                  repeat: Infinity,
+                  ease: "linear",
+                  delay: p.delay
+               }}
+            />
+         ))}
+      </div>
+   )
+}
 
 // 2.2. Thẻ ID Hologram 3D (Live Preview)
 const HologramIDCard = ({ name, username, step }: { name: string, username: string, step: number }) => {

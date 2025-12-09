@@ -26,17 +26,20 @@ const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max 
 
 // 2.1. Nền Sao Băng & Bụi Vũ Trụ (Particle System) - Optimized
 const StarField = React.memo(() => {
-  // Giảm từ 50 xuống 20 ngôi sao để tối ưu performance
-  const stars = React.useMemo(() => 
-    Array.from({ length: 20 }).map((_, i) => ({
+  const [stars, setStars] = React.useState<Array<{id:number;x:number;y:number;size:number;duration:number;delay:number}>>([])
+
+  React.useEffect(() => {
+    const list = Array.from({ length: 20 }).map((_, i) => ({
       id: i,
       x: randomInt(0, 100),
       y: randomInt(0, 100),
       size: Math.random() * 2 + 1,
       duration: randomInt(4, 8),
       delay: randomInt(0, 4)
-    })), []
-  )
+    }))
+    const raf = requestAnimationFrame(() => setStars(list))
+    return () => cancelAnimationFrame(raf)
+  }, [])
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">

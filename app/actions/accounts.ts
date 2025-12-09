@@ -111,7 +111,7 @@ export async function createAccount() {
 
         await tx.account.update({
           where: { id: account.id },
-          data: { balance: { increment: WELCOME_AMOUNT } as any }
+          data: { balance: { increment: WELCOME_AMOUNT } }
         })
       }
 

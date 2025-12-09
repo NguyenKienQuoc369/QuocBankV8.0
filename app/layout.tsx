@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 // 1. Import Component
-import { ClickSpark } from "@/components/ui/ClickSpark"; 
+import ClientSpark from '@/components/ui/ClientSpark'
+
+// Prevent build-time prerendering for the entire app (avoid client-hook execution during static export)
+export const dynamic = 'force-dynamic'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,8 +32,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* 2. Đặt component ở đây để nó nằm trên cùng mọi layer */}
-        <ClickSpark />
+        {/* 2. Đặt component ở đây để nó nằm trên cùng mọi layer (client-only) */}
+        <ClientSpark />
         {children}
       </body>
     </html>

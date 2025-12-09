@@ -1,4 +1,5 @@
 import React from 'react';
+export const dynamic = 'force-dynamic'
 import { getDashboardData } from '@/actions/dashboard';
 import { formatVND } from '@/lib/utils';
 import { ArrowUpRight, CreditCard, TrendingUp, Wallet, Send } from 'lucide-react';

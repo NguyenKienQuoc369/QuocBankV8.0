@@ -13,6 +13,7 @@ export function ParticleExplosion() {
     velocities: Float32Array
   } | null>(null)
 
+  const [positionsState, setPositionsState] = useState<Float32Array>(new Float32Array(0))
   const [, setReady] = useState(false)
 
   useEffect(() => {
@@ -37,7 +38,8 @@ export function ParticleExplosion() {
 
       if (mounted) {
         particlesDataRef.current = { positions, velocities }
-        // Trigger a re-render so bufferAttribute mounts with data
+        // Also expose positions via state so render can safely access it
+        setPositionsState(positions)
         setReady(true)
       }
     }
@@ -68,7 +70,7 @@ export function ParticleExplosion() {
     }
   })
 
-  const positions = particlesDataRef.current?.positions ?? new Float32Array(0)
+  const positions = positionsState
 
   return (
     <points ref={particlesRef}>

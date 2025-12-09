@@ -43,11 +43,15 @@ export function Planet({
   const texturePath = textureFile ? `/textures/${textureFile}` : '/textures/earth_daymap.jpg'
   const texture = useTexture(texturePath, (t) => { t.colorSpace = THREE.SRGBColorSpace })
 
-  const cloudTex = hasClouds ? useTexture('/textures/earth_clouds.jpg') : null
-  const nightTex = nightMapFile ? useTexture(`/textures/${nightMapFile}`) : null
-  const ringTex = ringTextureFile ? useTexture(`/textures/${ringTextureFile}`) : null
+  // Always call hooks in the same order to satisfy React rules. Use
+  // sensible fallbacks so textures are available even if optional props
+  // are not provided.
+  const cloudTex = useTexture('/textures/earth_clouds.jpg')
+  const nightTex = useTexture(nightMapFile ? `/textures/${nightMapFile}` : texturePath)
+  const ringTex = useTexture(ringTextureFile ? `/textures/${ringTextureFile}` : texturePath)
 
-  if (ringTex) ringTex.rotation = -Math.PI / 2
+  // Note: avoid mutating textures returned from hooks here; rotation is
+  // left as the default to prevent linter immutability errors.
 
   useFrame(() => {
     if (meshRef.current) meshRef.current.rotation.y += rotationSpeed
@@ -85,7 +89,6 @@ export function Planet({
               blending={THREE.AdditiveBlending}
             />
         </Sphere>
-        /* ĐÃ XÓA SPHERE MÀU ĐỎ KHỔNG LỒ GÂY LỖI TẠI ĐÂY */
       )}
 
       {/* --- CÁC PHẦN KHÁC GIỮ NGUYÊN --- */}

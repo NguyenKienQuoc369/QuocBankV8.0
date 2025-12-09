@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { } from 'react'
 import { motion } from 'framer-motion'
 import { formatVND, formatDate } from '@/lib/utils'
 import type { SavingsAccountInfo } from '@/actions/savings'
@@ -30,15 +30,16 @@ export function SavingsCard({ savings, onWithdraw }: SavingsCardProps) {
 
   const getProgressPercentage = () => {
     if (!savings.maturityDate) return 100 // Flexible savings
-    
-  const start = new Date(savings.startDate).getTime()
-  const end = new Date(savings.maturityDate).getTime()
-  const now = useMemo(() => Date.now(), [])
 
-  const total = end - start
-  const elapsed = now - start
-    
-    return Math.min(100, Math.max(0, (elapsed / total) * 100))
+    if (!savings.maturityDate || savings.daysRemaining === null) return 100
+
+    const start = new Date(savings.startDate).getTime()
+    const end = new Date(savings.maturityDate).getTime()
+
+    const totalDays = (end - start) / (1000 * 60 * 60 * 24)
+    const elapsedDays = Math.max(0, totalDays - (savings.daysRemaining ?? 0))
+
+    return Math.min(100, Math.max(0, (elapsedDays / totalDays) * 100))
   }
 
   const isMatured = savings.daysRemaining !== null && savings.daysRemaining === 0
