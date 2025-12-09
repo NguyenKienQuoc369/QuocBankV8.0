@@ -45,7 +45,6 @@ import { FloatingElement } from '@/components/ui/FloatingElement'
 import { CosmicLogo } from '@/components/ui/CosmicLogo'
 import { TechUniverse } from '@/components/ui/TechUniverse'
 import { HoloDashboard } from '@/components/ui/HoloDashboard'
-import { CustomCursor } from '@/components/ui/CustomCursor'
 // --- ICONS (LUCIDE REACT) ---
 import { 
   ArrowRight, ShieldCheck, Zap, Globe, Rocket, PlayCircle, 
@@ -408,7 +407,6 @@ export default function LandingPage() {
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: isSystemBooted ? 1 : 0 }} transition={{ duration: 1 }} className="flex flex-col min-h-screen">
         
         {/* GLOBAL UTILS */}
-        <CustomCursor />
         <ClickSpark />
           {/* Scroll Rocket Embedded */}
           <ScrollRocket />
