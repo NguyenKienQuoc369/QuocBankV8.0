@@ -104,46 +104,46 @@ const techModules = [
 
 // --- 2. SUB-COMPONENTS (Các module con) ---
 
-// 2.1. Nền không gian & Bụi (Static Particles)
-const SpaceBackground = () => (
+// 2.1. Nền không gian & Bụi (Static Particles) - Optimized
+const SpaceBackground = React.memo(() => (
   <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl z-0">
     {/* Lưới tọa độ */}
     <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,black,transparent)]" />
     
-    {/* Các đốm sáng trang trí */}
+    {/* Các đốm sáng trang trí - giảm số lượng */}
     <div className="absolute top-10 left-10 w-2 h-2 bg-white/20 rounded-full animate-ping" />
     <div className="absolute bottom-20 right-20 w-1 h-1 bg-[#00ff88]/40 rounded-full animate-pulse" />
-    <div className="absolute top-1/2 left-1/4 w-1 h-1 bg-blue-500/40 rounded-full" />
   </div>
-)
+))
 
-// 2.2. Terminal Logs (Màn hình code chạy)
-const SystemTerminal = ({ activeColor }: { activeColor: string }) => {
+SpaceBackground.displayName = 'SpaceBackground'
+
+// 2.2. Terminal Logs (Màn hình code chạy) - Optimized
+const SystemTerminal = React.memo(({ activeColor }: { activeColor: string }) => {
   const [logs, setLogs] = useState<string[]>([])
   // Danh sách lệnh giả lập
-  const messages = [
+  const messages = React.useMemo(() => [
     "Establishing secure handshake...", 
     "Verifying biometric signature...", 
     "Decrypting data stream...", 
     "Loading interface modules...", 
     "System check: PASSED.",
     "Rendering holographic projection..."
-  ]
+  ], [])
 
   useEffect(() => {
     setLogs([])
     let i = 0
     const interval = setInterval(() => {
       if (i < messages.length) {
-        setLogs(prev => [...prev.slice(-4), `> ${messages[i]}`]) // Chỉ giữ 5 dòng cuối
+        setLogs(prev => [...prev.slice(-4), `> ${messages[i]}`])
         i++
       } else {
-        // Reset ngẫu nhiên để terminal chạy mãi
         if (Math.random() > 0.8) i = 0 
       }
-    }, 400)
+    }, 500) // Tăng từ 400ms lên 500ms
     return () => clearInterval(interval)
-  }, [activeColor])
+  }, [activeColor, messages])
 
   return (
     <div className="h-32 bg-black/60 rounded border border-white/10 p-3 font-mono text-[10px] text-gray-400 overflow-hidden flex flex-col justify-end relative shadow-inner">
@@ -152,39 +152,56 @@ const SystemTerminal = ({ activeColor }: { activeColor: string }) => {
       </div>
       <div className="pt-4 space-y-1">
         {logs.map((log, i) => (
-          <motion.div key={i} initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }}>
+          <motion.div 
+            key={i} 
+            initial={{ opacity: 0, x: -5 }} 
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.2 }}
+          >
             <span style={{ color: activeColor }}>root@sys:~</span> {log}
           </motion.div>
         ))}
-        <motion.span animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-1.5 h-3 bg-[#00ff88] align-middle ml-1"/>
+        <motion.span 
+          animate={{ opacity: [0, 1, 0] }} 
+          transition={{ repeat: Infinity, duration: 1, ease: "linear" }} 
+          className="inline-block w-1.5 h-3 bg-[#00ff88] align-middle ml-1"
+        />
       </div>
     </div>
   )
-}
+})
 
-// 2.3. Audio Visualizer (Sóng âm nhạc)
-const AudioVisualizer = ({ color }: { color: string }) => (
-  <div className="flex items-end gap-[3px] h-12 w-full opacity-80">
-    {[...Array(20)].map((_, i) => (
-      <motion.div
-        key={i}
-        className="w-1.5 bg-current rounded-t-sm"
-        style={{ backgroundColor: color }}
-        animate={{ height: ["10%", "90%", "30%", "60%", "20%"] }}
-        transition={{ 
-          duration: 0.8, 
-          repeat: Infinity, 
-          repeatType: "reverse", 
-          delay: i * 0.05,
-          ease: "easeInOut" 
-        }}
-      />
-    ))}
-  </div>
-)
+SystemTerminal.displayName = 'SystemTerminal'
 
-// 2.4. Radar Scan (Quét radar)
-const RadarScan = ({ color }: { color: string }) => (
+// 2.3. Audio Visualizer (Sóng âm nhạc) - Optimized
+const AudioVisualizer = React.memo(({ color }: { color: string }) => {
+  const bars = React.useMemo(() => [...Array(15)], []) // Giảm từ 20 xuống 15
+  
+  return (
+    <div className="flex items-end gap-[3px] h-12 w-full opacity-80">
+      {bars.map((_, i) => (
+        <motion.div
+          key={i}
+          className="w-1.5 bg-current rounded-t-sm"
+          style={{ backgroundColor: color, willChange: 'height' }}
+          animate={{ height: ["10%", "80%", "30%", "60%", "20%"] }}
+          transition={{ 
+            duration: 1, 
+            repeat: Infinity, 
+            repeatType: "reverse", 
+            delay: i * 0.06,
+            ease: "linear" 
+          }}
+        />
+      ))}
+    </div>
+  )
+})
+
+AudioVisualizer.displayName = 'AudioVisualizer'
+
+// 2.4. Radar Scan (Quét radar) - Optimized
+const RadarScan = React.memo(({ color }: { color: string }) => (
    <div className="relative w-24 h-24 rounded-full border border-white/10 flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle,transparent_30%,rgba(0,0,0,0.8)_100%)]"></div>
       <div className="absolute w-full h-[1px] bg-white/20 top-1/2"></div>
@@ -192,18 +209,21 @@ const RadarScan = ({ color }: { color: string }) => (
       {/* Kim quét */}
       <motion.div 
          animate={{ rotate: 360 }}
-         transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+         transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
          className="absolute w-1/2 h-1/2 top-0 left-0 origin-bottom-right bg-gradient-to-t from-transparent to-current opacity-30"
-         style={{ color: color }}
+         style={{ color: color, willChange: 'transform' }}
       />
       {/* Điểm mục tiêu */}
       <motion.div 
          animate={{ opacity: [0, 1, 0] }}
-         transition={{ duration: 2, repeat: Infinity }}
+         transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
          className="absolute top-6 left-6 w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_5px_white]"
+         style={{ willChange: 'opacity' }}
       />
    </div>
-)
+))
+
+RadarScan.displayName = 'RadarScan'
 
 // --- 3. COMPONENT CHÍNH ---
 
