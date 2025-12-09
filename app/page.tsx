@@ -124,8 +124,7 @@ const staggerContainer: Variants = {
 
 // TextDecode: moved to `components/ui/TextDecode`
 
-// 3.4. CUSTOM CURSOR
-// Implemented in `components/ui/CustomCursor`
+// 3.4. CUSTOM CURSOR (removed)
 
 // 3.5 / 3.6: ClickSpark and ScrollRocket moved to `components/ui`
 // Using the imported `ClickSpark` and `ScrollRocket` components instead
