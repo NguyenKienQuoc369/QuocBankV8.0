@@ -35,6 +35,16 @@ import {
 
 // Use the shared 3D cosmic background (Canvas + Environment)
 import { CosmicBackground } from '@/components/ui/CosmicBackground'
+import { ScrollRocket } from '@/components/ui/ScrollRocket'
+import { ClickSpark } from '@/components/ui/ClickSpark'
+import { HyperText } from '@/components/ui/HyperText'
+import { TextDecode } from '@/components/ui/TextDecode'
+import { MagneticButton } from '@/components/ui/MagneticButton'
+import { SpotlightCard } from '@/components/ui/SpotlightCard'
+import { FloatingElement } from '@/components/ui/FloatingElement'
+import { CosmicLogo } from '@/components/ui/CosmicLogo'
+import { TechUniverse } from '@/components/ui/TechUniverse'
+import { HoloDashboard } from '@/components/ui/HoloDashboard'
 // --- ICONS (LUCIDE REACT) ---
 import { 
   ArrowRight, ShieldCheck, Zap, Globe, Rocket, PlayCircle, 
@@ -107,71 +117,12 @@ const staggerContainer: Variants = {
 // SECTION 3: EMBEDDED UI COMPONENTS (NHÚNG TRỰC TIẾP)
 // =============================================================================
 
-// 3.1. COSMIC LOGO
-const CosmicLogo = ({ size = 40, className = "" }: { size?: number, className?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    <circle cx="50" cy="50" r="45" stroke="url(#paint0_linear)" strokeWidth="8"/>
-    <path d="M50 5V95" stroke="url(#paint1_linear)" strokeWidth="4" strokeLinecap="round"/>
-    <path d="M5 50H95" stroke="url(#paint2_linear)" strokeWidth="4" strokeLinecap="round"/>
-    <circle cx="50" cy="50" r="15" fill="#00FF88" className="animate-pulse"/>
-    <defs>
-      <linearGradient id="paint0_linear" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#00FF88"/><stop offset="1" stopColor="#00D4FF"/>
-      </linearGradient>
-      <linearGradient id="paint1_linear" x1="50" y1="5" x2="50" y2="95" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#00FF88" stopOpacity="0"/><stop offset="0.5" stopColor="#00FF88"/><stop offset="1" stopColor="#00FF88" stopOpacity="0"/>
-      </linearGradient>
-      <linearGradient id="paint2_linear" x1="5" y1="50" x2="95" y2="50" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#00D4FF" stopOpacity="0"/><stop offset="0.5" stopColor="#00D4FF"/><stop offset="1" stopColor="#00D4FF" stopOpacity="0"/>
-      </linearGradient>
-    </defs>
-  </svg>
-)
+// `CosmicLogo` moved to `components/ui/CosmicLogo`.
+// Use the imported `CosmicLogo` component instead of the inline SVG.
 
-// 3.2. HYPER TEXT
-const HyperText = ({ text, className = "" }: { text: string, className?: string }) => {
-  const [displayText, setDisplayText] = useState(text)
-  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-  
-  const animate = () => {
-    let iteration = 0;
-    const interval = setInterval(() => {
-      setDisplayText(text.split("").map((letter, index) => {
-        if(index < iteration) return text[index];
-        return letters[Math.floor(Math.random() * 26)]
-      }).join(""))
-      if(iteration >= text.length) clearInterval(interval);
-      iteration += 1/3;
-    }, 30);
-  }
+// HyperText: moved to `components/ui/HyperText`
 
-  return (
-    <span className={`cursor-default ${className}`} onMouseEnter={animate}>
-      {displayText}
-    </span>
-  )
-}
-
-// 3.3. TEXT DECODE
-const TextDecode = ({ text, className="" }: { text: string, className?: string }) => {
-  const [display, setDisplay] = useState("")
-  const [mounted, setMounted] = useState(false)
-  
-  useEffect(() => {
-    setMounted(true)
-    let i = 0
-    const timer = setInterval(() => {
-      if (i < text.length) {
-        setDisplay(prev => prev + text.charAt(i))
-        i++
-      } else clearInterval(timer)
-    }, 50)
-    return () => clearInterval(timer)
-  }, [text])
-
-  if (!mounted) return <span className={className}>{text}</span> // SSR fallback
-  return <span className={`font-mono ${className}`}>{display}</span>
-}
+// TextDecode: moved to `components/ui/TextDecode`
 
 // 3.4. COSMIC CURSOR (Custom Mouse)
 const CosmicCursor = () => {
@@ -215,125 +166,20 @@ const CosmicCursor = () => {
   )
 }
 
-// 3.5. CLICK SPARK (Explosion Effect)
-const ClickSpark = () => {
-  const [sparks, setSparks] = useState<{id: number, x: number, y: number}[]>([])
-  useEffect(() => {
-    const clickHandler = (e: MouseEvent) => {
-      const newSpark = { id: Date.now(), x: e.clientX, y: e.clientY }
-      setSparks(p => [...p, newSpark])
-      setTimeout(() => setSparks(p => p.filter(s => s.id !== newSpark.id)), 800)
-    }
-    window.addEventListener('mousedown', clickHandler)
-    return () => window.removeEventListener('mousedown', clickHandler)
-  }, [])
-  return (
-    <div className="fixed inset-0 pointer-events-none z-[9998]">
-      <AnimatePresence>
-        {sparks.map(s => (
-          <motion.div 
-            key={s.id} 
-            initial={{ scale:0, opacity:1 }} 
-            animate={{ scale:2.5, opacity:0 }} 
-            exit={{ opacity:0 }} 
-            transition={{ duration: 0.5 }} 
-            className="absolute w-20 h-20 border-2 border-[#00ff88] rounded-full" 
-            style={{ left: s.x, top: s.y, x: '-50%', y: '-50%' }} 
-          />
-        ))}
-      </AnimatePresence>
-    </div>
-  )
-}
+// 3.5 / 3.6: ClickSpark and ScrollRocket moved to `components/ui`
+// Using the imported `ClickSpark` and `ScrollRocket` components instead
+// of the inline implementations to reduce duplication and centralize behavior.
 
-// 3.6. SCROLL ROCKET
-const ScrollRocket = () => {
-  const { scrollYProgress } = useScroll()
-  const y = useTransform(scrollYProgress, [0, 1], ['0%', '90%'])
-  return (
-    <div className="fixed right-2 top-0 bottom-0 w-1 bg-white/5 z-[90] hidden md:block">
-      <motion.div style={{ top: y }} className="absolute -left-[5px] text-[#00ff88]">
-        <Rocket size={14} className="rotate-[-45deg]" />
-        <div className="w-[1px] h-20 bg-gradient-to-t from-[#00ff88] to-transparent mx-auto mt-[-5px]" />
-      </motion.div>
-    </div>
-  )
-}
-
-// 3.7. MAGNETIC BUTTON
-const MagneticButton = ({ children, className = "", onClick }: any) => {
-  const ref = useRef<HTMLButtonElement>(null)
-  const [pos, setPos] = useState({ x: 0, y: 0 })
-  const handleMove = (e: React.MouseEvent) => {
-    if(!ref.current) return
-    const { clientX, clientY } = e
-    const { left, top, width, height } = ref.current.getBoundingClientRect()
-    const x = (clientX - (left + width / 2)) * 0.3
-    const y = (clientY - (top + height / 2)) * 0.3
-    setPos({ x, y })
-  }
-  const handleLeave = () => setPos({ x: 0, y: 0 })
-  return (
-    <motion.button
-      ref={ref}
-      onMouseMove={handleMove}
-      onMouseLeave={handleLeave}
-      onClick={onClick}
-      animate={{ x: pos.x, y: pos.y }}
-      transition={{ type: "spring", stiffness: 150, damping: 15 }}
-      className={className}
-    >
-      {children}
-    </motion.button>
-  )
-}
+// MagneticButton: moved to `components/ui/MagneticButton`
 
 // The full 3D Canvas cosmic background is provided by
 // `components/ui/CosmicBackground` (a client component using R3F).
 // The in-file placeholder was removed so we render the proper galaxy
 // background component imported from `components/ui`.
 
-// 3.9. SPOTLIGHT CARD
-const SpotlightCard = ({ children, className="", spotlightColor="rgba(255,255,255,0.1)" }: any) => {
-  const divRef = useRef<HTMLDivElement>(null)
-  const [position, setPosition] = useState({ x: 0, y: 0 })
-  const [opacity, setOpacity] = useState(0)
+// SpotlightCard: moved to `components/ui/SpotlightCard`
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!divRef.current) return
-    const rect = divRef.current.getBoundingClientRect()
-    setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top })
-  }
-
-  return (
-    <div
-      ref={divRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setOpacity(1)}
-      onMouseLeave={() => setOpacity(0)}
-      className={`relative rounded-3xl border border-white/10 bg-black/50 overflow-hidden ${className}`}
-    >
-      <div
-        className="pointer-events-none absolute -inset-px opacity-0 transition duration-300"
-        style={{
-          opacity,
-          background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 40%)`,
-        }}
-      />
-      <div className="relative h-full">{children}</div>
-    </div>
-  )
-}
-
-// 3.10. FLOATING ELEMENT
-const FloatingElement = ({ children, duration = 3, yOffset = 10 }: any) => (
-  <motion.div
-    animate={{ y: [0, -yOffset, 0] }}
-    transition={{ duration, repeat: Infinity, ease: "easeInOut" }}
-  >
-    {children}
-  </motion.div>
-)
+// FloatingElement: moved to `components/ui/FloatingElement`
 
 // 3.11. SMART COUNTER (SSR Safe)
 function SmartCounter({ value, suffix = "", prefix = "" }: { value: number, suffix?: string, prefix?: string }) {
@@ -402,118 +248,12 @@ const AudioVis = ({ color }: { color: string }) => (
   </div>
 )
 
-const TechUniverse = () => {
-  const [activeId, setActiveId] = useState(TECH_DATA[0].id)
-  const activeTech = TECH_DATA.find(t => t.id === activeId) || TECH_DATA[0]
-
-  return (
-    <div className="flex flex-col lg:flex-row h-full w-full bg-black/80 rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
-      {/* Sidebar */}
-      <div className="w-full lg:w-1/3 border-r border-white/10 bg-white/[0.02] flex flex-col">
-        <div className="p-6 border-b border-white/10">
-          <div className="flex items-center gap-2 mb-1"><Activity size={16} className="text-[#00ff88] animate-pulse" /><span className="text-xs font-bold tracking-[0.2em] text-white">SYSTEM DIAGNOSTICS</span></div>
-          <div className="text-[10px] text-gray-500 font-mono">V.20.0 // CONNECTED</div>
-        </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-          {TECH_DATA.map((tech) => (
-            <button key={tech.id} onClick={() => setActiveId(tech.id)} className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all duration-300 text-left relative overflow-hidden group ${activeId === tech.id ? 'bg-white/10 border-white/20' : 'bg-transparent border-transparent hover:bg-white/5'}`}>
-              {activeId === tech.id && <motion.div layoutId="activeTechBar" className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: tech.color }} />}
-              <div className={`p-2 rounded-lg transition-colors ${activeId === tech.id ? 'bg-black text-white' : 'bg-white/5 text-gray-500 group-hover:text-white'}`}><tech.icon size={18} /></div>
-              <div><div className={`text-sm font-bold tracking-wide ${activeId === tech.id ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>{tech.name}</div><div className="text-[9px] text-gray-600 font-mono group-hover:text-[#00ff88]">STATUS: ONLINE</div></div>
-            </button>
-          ))}
-        </div>
-      </div>
-      {/* Main Screen */}
-      <div className="flex-1 relative p-8 lg:p-12 flex flex-col overflow-hidden bg-black/40">
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,0,0,0.5)_50%)] bg-[size:100%_4px] opacity-10 pointer-events-none" />
-        <AnimatePresence mode='wait'>
-          <motion.div key={activeTech.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="flex-1 flex flex-col">
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <div className="flex items-center gap-2 mb-2"><span className="px-2 py-0.5 rounded bg-white/10 text-[9px] font-mono text-white border border-white/10">ID: {activeTech.code}</span><span className="px-2 py-0.5 rounded bg-[#00ff88]/10 text-[9px] font-mono text-[#00ff88] border border-[#00ff88]/20 flex items-center gap-1"><span className="w-1 h-1 rounded-full bg-[#00ff88] animate-pulse"/> OPERATIONAL</span></div>
-                <h2 className="text-4xl lg:text-6xl font-black mb-4 tracking-tighter text-white">{activeTech.name}</h2>
-                <motion.div initial={{ width: 0 }} animate={{ width: 100 }} className="h-1 mb-6" style={{ backgroundColor: activeTech.color }} />
-                <p className="text-gray-400 text-lg font-light leading-relaxed border-l-2 border-white/10 pl-4 max-w-xl">{activeTech.longDesc}</p>
-              </div>
-              <div className="hidden lg:block opacity-50"><Radar size={64} style={{ color: activeTech.color }} className="animate-spin-slow" /></div>
-            </div>
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              {activeTech.specs.map((spec, i) => (
-                <motion.div key={i} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.2 + i*0.1 }} className="bg-white/5 border border-white/10 p-4 rounded-xl group hover:bg-white/10 transition-colors">
-                  <div className="text-[10px] text-gray-500 font-bold mb-1">{spec.l}</div><div className="text-xl font-mono font-bold text-white">{spec.v}</div><div className="text-[9px] text-[#00ff88] mt-1 font-mono">{spec.s}</div>
-                </motion.div>
-              ))}
-            </div>
-            <div className="mt-auto grid grid-cols-2 gap-6 h-32">
-               <SystemTerminal activeColor={activeTech.color} />
-               <div className="bg-black/40 border border-white/10 rounded-xl p-4 flex flex-col justify-end"><div className="flex justify-between items-center mb-2"><span className="text-[9px] text-gray-500 font-bold">SIGNAL</span><Wifi size={12} className="text-gray-500" /></div><AudioVis color={activeTech.color} /></div>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
-    </div>
-  )
-}
+// `TechUniverse` moved to `components/ui/TechUniverse`.
+// Use the imported `TechUniverse` component instead of the inline implementation.
 
 // 4.2. HOLO DASHBOARD (Bảng phân tích thị trường)
-const HoloDashboard = () => {
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => {
-    const raf = requestAnimationFrame(() => setMounted(true))
-    return () => cancelAnimationFrame(raf)
-  }, [])
-  const [barRanges, setBarRanges] = useState<{ min: string; max: string }[]>([])
-  useEffect(() => {
-    const arr = Array.from({ length: 20 }).map(() => {
-      const low = Math.floor(Math.random() * 20 + 10)
-      const high = Math.floor(Math.random() * 80 + 20)
-      return { min: `${low}%`, max: `${high}%` }
-    })
-    const raf = requestAnimationFrame(() => setBarRanges(arr))
-    return () => cancelAnimationFrame(raf)
-  }, [])
-  if(!mounted) return null
-
-  return (
-    <div className="relative w-full max-w-sm h-[500px] perspective-1000 mx-auto">
-      <motion.div 
-        animate={{ rotateY: [0, 5, 0, -5, 0], rotateX: [0, -5, 0, 5, 0] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-        className="w-full h-full bg-black/60 border border-[#00ff88]/30 rounded-2xl p-6 relative overflow-hidden backdrop-blur-md shadow-[0_0_50px_rgba(0,255,136,0.1)]"
-      >
-        <div className="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-           <div className="flex items-center gap-2">
-              <Activity size={16} className="text-[#00ff88]" />
-              <span className="text-xs font-bold text-white tracking-widest">LIVE MARKET</span>
-           </div>
-           <div className="text-[10px] text-gray-500 font-mono">SECURE</div>
-        </div>
-        <div className="space-y-4">
-           {MARKET_DATA.map((item, i) => (
-              <div key={i} className="bg-white/5 p-3 rounded-lg border border-white/5 flex justify-between items-center">
-                 <div>
-                    <div className="text-xs text-gray-400 font-bold">{item.pair}</div>
-                    <div className="text-sm font-mono text-white">${item.price.toLocaleString()}</div>
-                 </div>
-                 <div className={`text-xs font-bold ${item.change >= 0 ? 'text-[#00ff88]' : 'text-red-500'}`}>
-                    {item.change >= 0 ? '+' : ''}{item.change}%
-                 </div>
-              </div>
-           ))}
-        </div>
-        <div className="absolute bottom-6 left-6 right-6">
-           <div className="text-[10px] text-gray-500 mb-2 font-mono">VOLATILITY INDEX</div>
-            <div className="h-24 flex items-end gap-1">
-              {barRanges.map((r, i) => (
-                <motion.div key={i} className="flex-1 bg-[#00ff88]/30 rounded-t-sm" animate={{ height: [r.min, r.max] }} transition={{ duration: 1, repeat: Infinity, repeatType: "reverse", delay: i*0.05 }} />
-              ))}
-            </div>
-        </div>
-      </motion.div>
-    </div>
-  )
-}
+// `HoloDashboard` moved to `components/ui/HoloDashboard`.
+// Use the imported `HoloDashboard` component instead of the inline implementation.
 
 // 4.3. SYSTEM BOOT LOADER (Màn hình chờ 30s giả lập)
 const SystemBootLoader = ({ onComplete, backgroundReady }: { onComplete: () => void, backgroundReady?: boolean }) => {
@@ -708,12 +448,8 @@ export default function LandingPage() {
         {/* GLOBAL UTILS */}
         <CosmicCursor />
         <ClickSpark />
-        {/* Scroll Rocket Embedded */}
-        <div className="fixed right-2 top-0 bottom-0 w-1 bg-white/5 z-[90] hidden md:block">
-           <motion.div style={{ top: rocketTop }} className="absolute -left-[5px] text-[#00ff88]">
-              <Rocket size={14} className="rotate-[-45deg]" /><div className="w-[1px] h-20 bg-gradient-to-t from-[#00ff88] to-transparent mx-auto mt-[-5px]" />
-           </motion.div>
-        </div>
+          {/* Scroll Rocket Embedded */}
+          <ScrollRocket />
 
         {/* BACKGROUND */}
         <div className="fixed inset-0 z-0 pointer-events-none">
