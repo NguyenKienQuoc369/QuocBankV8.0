@@ -78,7 +78,7 @@ const StarField = () => {
 // 2.2. Lõi Lượng Tử (Quantum Core) - Thay thế AuthOrb cũ
 const QuantumCore = () => {
   return (
-    <div className="relative w-64 h-64 flex items-center justify-center">
+    <div className="relative w-72 h-72 flex items-center justify-center mx-auto">
       {/* Vòng ngoài cùng */}
       <motion.div
         className="absolute inset-0 border border-indigo-500/30 rounded-full border-dashed"
@@ -106,7 +106,7 @@ const QuantumCore = () => {
           animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
           transition={{ duration: 4, repeat: Infinity }}
         />
-        <div className="w-20 h-20 bg-black rounded-full border border-white/10 flex items-center justify-center relative z-10 shadow-[0_0_50px_rgba(79,70,229,0.5)]">
+        <div className="w-20 h-20 bg-black rounded-full border border-white/10 flex items-center justify-center absolute shadow-[0_0_50px_rgba(79,70,229,0.5)]">
            <Zap className="text-cyan-400 w-10 h-10 animate-pulse" />
         </div>
       </div>
@@ -294,13 +294,15 @@ export default function LoginPage() {
           </div>
 
           {/* Center Visual (Quantum Core) */}
-          <div className="relative z-10 flex-1 flex flex-col items-center justify-center">
-             <QuantumCore />
+          <div className="relative z-10 flex-1 flex flex-col items-center justify-center py-8">
+             <div className="flex items-center justify-center w-full">
+               <QuantumCore />
+             </div>
              <motion.p 
                initial={{ opacity: 0 }}
                animate={{ opacity: 1 }}
                transition={{ delay: 1 }}
-               className="mt-8 text-center text-gray-400 text-sm max-w-xs leading-relaxed"
+               className="mt-8 text-center text-gray-400 text-sm max-w-xs leading-relaxed px-4"
              >
                Cổng kết nối đến mạng lưới tài chính đa chiều. Vui lòng xác thực danh tính để truy cập khoang điều khiển.
              </motion.p>
