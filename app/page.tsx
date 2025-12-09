@@ -33,6 +33,8 @@ import {
   Variants 
 } from 'framer-motion'
 
+// Use the shared 3D cosmic background (Canvas + Environment)
+import { CosmicBackground } from '@/components/ui/CosmicBackground'
 // --- ICONS (LUCIDE REACT) ---
 import { 
   ArrowRight, ShieldCheck, Zap, Globe, Rocket, PlayCircle, 
@@ -286,33 +288,10 @@ const MagneticButton = ({ children, className = "", onClick }: any) => {
   )
 }
 
-// 3.8. COSMIC BACKGROUND (Updated with Hydration Safety)
-const CosmicBackground = () => {
-  const [mounted, setMounted] = useState(false)
-  const [barRanges, setBarRanges] = useState<{ min: string; max: string }[]>([])
-  useEffect(() => {
-    const raf = requestAnimationFrame(() => setMounted(true))
-    return () => cancelAnimationFrame(raf)
-  }, [])
-  useEffect(() => {
-    const arr = Array.from({ length: 20 }).map(() => {
-      const low = Math.floor(Math.random() * 20 + 10)
-      const high = Math.floor(Math.random() * 80 + 20)
-      return { min: `${low}%`, max: `${high}%` }
-    })
-    const raf = requestAnimationFrame(() => setBarRanges(arr))
-    return () => cancelAnimationFrame(raf)
-  }, [])
-  if(!mounted) return null
-
-  return (
-    <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none opacity-40">
-      <div className="absolute w-96 h-96 bg-indigo-600 rounded-full blur-[150px] opacity-20" />
-      <motion.div animate={{ rotate: 360 }} transition={{ duration: 120, repeat: Infinity, ease: "linear" }} className="absolute w-[800px] h-[800px] border border-white/5 rounded-full" />
-      <motion.div animate={{ rotate: -360 }} transition={{ duration: 180, repeat: Infinity, ease: "linear" }} className="absolute w-[1200px] h-[1200px] border border-white/5 rounded-full border-dashed" />
-    </div>
-  )
-}
+// The full 3D Canvas cosmic background is provided by
+// `components/ui/CosmicBackground` (a client component using R3F).
+// The in-file placeholder was removed so we render the proper galaxy
+// background component imported from `components/ui`.
 
 // 3.9. SPOTLIGHT CARD
 const SpotlightCard = ({ children, className="", spotlightColor="rgba(255,255,255,0.1)" }: any) => {
