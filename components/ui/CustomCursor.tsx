@@ -71,7 +71,7 @@ export function CustomCursor() {
         transition={{ type: 'spring', stiffness: 400, damping: 40 }}
       >
         <div style={{ transform: 'translate(-50%, -50%)' }}>
-          <div className="w-3 h-3 rounded-full bg-[#00ff88] shadow-[0_0_12px_rgba(0,255,136,0.35)]" />
+          <div className="w-6 h-6 rounded-full bg-[#00ff88] shadow-[0_0_18px_rgba(0,255,136,0.45)]" />
         </div>
       </motion.div>
 
@@ -85,7 +85,7 @@ export function CustomCursor() {
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       >
         <div style={{ transform: 'translate(-50%, -50%)' }}>
-          <div className="w-8 h-8 rounded-full border border-[#00ff88]/20 backdrop-blur-sm" />
+          <div className="w-14 h-14 rounded-full border-2 border-[#00ff88]/25 backdrop-blur-sm" />
         </div>
       </motion.div>
     </>
