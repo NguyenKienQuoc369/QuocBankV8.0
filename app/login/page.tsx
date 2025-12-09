@@ -239,35 +239,68 @@ const BiosBoot = ({ onComplete }: { onComplete: () => void }) => {
 
 // 3.3. TESSERACT CORE (Khối 3D xoay)
 const TesseractCore = () => {
+  const cubeStyle: React.CSSProperties = {
+    width: '192px',
+    height: '192px',
+    position: 'relative',
+    transformStyle: 'preserve-3d',
+    animation: 'spin3d 20s linear infinite',
+  }
+
+  const faceStyle: React.CSSProperties = {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    border: '2px solid rgba(0, 255, 136, 0.5)',
+    background: 'rgba(0, 255, 136, 0.05)',
+    backfaceVisibility: 'visible',
+  }
+
+  const innerFaceStyle: React.CSSProperties = {
+    position: 'absolute',
+    width: '60%',
+    height: '60%',
+    top: '20%',
+    left: '20%',
+    border: '2px solid rgba(0, 212, 255, 0.5)',
+    background: 'rgba(0, 212, 255, 0.1)',
+    backfaceVisibility: 'visible',
+  }
+
   return (
-    <div className="w-48 h-48 relative preserve-3d animate-spin-slow-3d">
+    <>
       <style jsx>{`
-        .preserve-3d { transform-style: preserve-3d; }
-        .face { position: absolute; width: 100%; height: 100%; border: 2px solid rgba(0, 255, 136, 0.5); background: rgba(0, 255, 136, 0.05); }
-        .inner-face { position: absolute; width: 60%; height: 60%; top: 20%; left: 20%; border: 2px solid rgba(0, 212, 255, 0.5); background: rgba(0, 212, 255, 0.1); }
-        @keyframes spin3d { from { transform: rotateX(0) rotateY(0) rotateZ(0); } to { transform: rotateX(360deg) rotateY(180deg) rotateZ(360deg); } }
-        .animate-spin-slow-3d { animation: spin3d 20s linear infinite; }
+        @keyframes spin3d {
+          from {
+            transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+          }
+          to {
+            transform: rotateX(360deg) rotateY(180deg) rotateZ(360deg);
+          }
+        }
       `}</style>
       
-      {/* Outer Cube */}
-      <div className="face translate-z-24" style={{ transform: 'translateZ(96px)' }} />
-      <div className="face -translate-z-24" style={{ transform: 'rotateY(180deg) translateZ(96px)' }} />
-      <div className="face rotate-y-90 translate-z-24" style={{ transform: 'rotateY(90deg) translateZ(96px)' }} />
-      <div className="face -rotate-y-90 translate-z-24" style={{ transform: 'rotateY(-90deg) translateZ(96px)' }} />
-      <div className="face rotate-x-90 translate-z-24" style={{ transform: 'rotateX(90deg) translateZ(96px)' }} />
-      <div className="face -rotate-x-90 translate-z-24" style={{ transform: 'rotateX(-90deg) translateZ(96px)' }} />
+      <div style={cubeStyle}>
+        {/* Outer Cube */}
+        <div style={{ ...faceStyle, transform: 'translateZ(96px)' }} />
+        <div style={{ ...faceStyle, transform: 'rotateY(180deg) translateZ(96px)' }} />
+        <div style={{ ...faceStyle, transform: 'rotateY(90deg) translateZ(96px)' }} />
+        <div style={{ ...faceStyle, transform: 'rotateY(-90deg) translateZ(96px)' }} />
+        <div style={{ ...faceStyle, transform: 'rotateX(90deg) translateZ(96px)' }} />
+        <div style={{ ...faceStyle, transform: 'rotateX(-90deg) translateZ(96px)' }} />
 
-      {/* Inner Cube */}
-      <div className="inner-face translate-z-12" style={{ transform: 'translateZ(48px)' }} />
-      <div className="inner-face -translate-z-12" style={{ transform: 'rotateY(180deg) translateZ(48px)' }} />
-      <div className="inner-face rotate-y-90 translate-z-12" style={{ transform: 'rotateY(90deg) translateZ(48px)' }} />
-      <div className="inner-face -rotate-y-90 translate-z-12" style={{ transform: 'rotateY(-90deg) translateZ(48px)' }} />
-      <div className="inner-face rotate-x-90 translate-z-12" style={{ transform: 'rotateX(90deg) translateZ(48px)' }} />
-      <div className="inner-face -rotate-x-90 translate-z-12" style={{ transform: 'rotateX(-90deg) translateZ(48px)' }} />
-      
-      {/* Core Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-[#00ff88] rounded-full blur-[40px] animate-pulse" />
-    </div>
+        {/* Inner Cube */}
+        <div style={{ ...innerFaceStyle, transform: 'translateZ(48px)' }} />
+        <div style={{ ...innerFaceStyle, transform: 'rotateY(180deg) translateZ(48px)' }} />
+        <div style={{ ...innerFaceStyle, transform: 'rotateY(90deg) translateZ(48px)' }} />
+        <div style={{ ...innerFaceStyle, transform: 'rotateY(-90deg) translateZ(48px)' }} />
+        <div style={{ ...innerFaceStyle, transform: 'rotateX(90deg) translateZ(48px)' }} />
+        <div style={{ ...innerFaceStyle, transform: 'rotateX(-90deg) translateZ(48px)' }} />
+        
+        {/* Core Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-[#00ff88] rounded-full blur-[40px] animate-pulse" />
+      </div>
+    </>
   )
 }
 
@@ -435,7 +468,8 @@ export default function LoginPage() {
   // --- RENDER MAIN INTERFACE ---
   return (
     <div 
-      className="min-h-screen w-full bg-black text-white flex items-center justify-center relative overflow-hidden font-sans selection:bg-[#00ff88] selection:text-black perspective-1000"
+      className="min-h-screen w-full bg-black text-white flex items-center justify-center relative overflow-hidden font-sans selection:bg-[#00ff88] selection:text-black"
+      style={{ perspective: '1000px' }}
       onMouseMove={handleMouseMove}
     >
       {/* 1. LAYER BACKGROUND */}
@@ -483,7 +517,7 @@ export default function LoginPage() {
            </div>
 
            {/* Center Piece: Tesseract */}
-           <div className="relative z-10 flex justify-center perspective-1000">
+           <div className="relative z-10 flex justify-center" style={{ perspective: '1000px' }}>
               <TesseractCore />
            </div>
 
