@@ -556,7 +556,8 @@ const SystemBootLoader = ({ onComplete }: { onComplete: () => void }) => {
     let currentProgress = 0
     const interval = setInterval(() => {
       if (currentTask < bootTasks.length) {
-        setLogs(prev => [...prev.slice(-4), `> ${bootTasks[currentTask].msg}`])
+        const message = bootTasks[currentTask]?.msg ?? '...'
+        setLogs(prev => [...prev.slice(-4), `> ${message}`])
         const step = 100 / bootTasks.length
         currentProgress = Math.min(currentProgress + step, 100)
         setProgress(currentProgress)
@@ -829,7 +830,7 @@ export default function LandingPage() {
                  {TESTIMONIALS.map((item, i) => (
                     <SpotlightCard key={i} className="p-10 h-full bg-white/5" spotlightColor="rgba(255, 255, 255, 0.1)">
                        <div className="flex gap-1 mb-6 text-yellow-400">{[1,2,3,4,5].map(s => <Star key={s} size={18} fill="currentColor" />)}</div>
-                       <p className="text-gray-300 mb-8 italic text-lg leading-relaxed">“{item.msg}”</p>
+                       <p className="text-gray-300 mb-8 italic text-lg leading-relaxed">“{item.msg ?? ''}”</p>
                        <div className="flex items-center gap-4 mt-auto">
                           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 border-2 border-white/20"></div>
                           <div><div className="font-bold text-white text-lg"><HyperText text={item.name} /></div><div className="text-xs text-[#00ff88] uppercase tracking-wider">{item.role}</div></div>
