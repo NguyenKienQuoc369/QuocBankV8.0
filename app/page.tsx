@@ -516,7 +516,7 @@ const HoloDashboard = () => {
 }
 
 // 4.3. SYSTEM BOOT LOADER (Màn hình chờ 30s giả lập)
-const SystemBootLoader = ({ onComplete }: { onComplete: () => void }) => {
+const SystemBootLoader = ({ onComplete, backgroundReady }: { onComplete: () => void, backgroundReady?: boolean }) => {
   const [progress, setProgress] = useState(0)
   const [logs, setLogs] = useState<string[]>([])
   const bootTasks = [
@@ -533,33 +533,92 @@ const SystemBootLoader = ({ onComplete }: { onComplete: () => void }) => {
   useEffect(() => {
     let currentTask = 0
     let currentProgress = 0
-    const interval = setInterval(() => {
+    let mounted = true
+
+    // Start slightly later so background assets have time to begin loading
+    const initialDelay = 600
+
+    const runTask = () => {
+      if (!mounted) return
+      if (currentTask === 0) {
+        // show an early message about loading background
+        setLogs(prev => [...prev.slice(-4), `> LOADING GALAXY BACKGROUND...`])
+      }
+
       if (currentTask < bootTasks.length) {
-        const message = bootTasks[currentTask]?.msg ?? '...'
+        const task = bootTasks[currentTask]
+        const message = task?.msg ?? '...'
         setLogs(prev => [...prev.slice(-4), `> ${message}`])
         const step = 100 / bootTasks.length
         currentProgress = Math.min(currentProgress + step, 100)
         setProgress(currentProgress)
         currentTask++
+
+        // Schedule next using this task's time (gives natural stagger)
+        const delay = (task?.time ?? 800) + 300
+        setTimeout(runTask, delay)
       } else {
-        clearInterval(interval)
         setProgress(100)
-        setTimeout(onComplete, 800)
+        // give a small pause so the final state is visible
+        const finish = () => {
+          if (mounted) onComplete()
+        }
+
+        if (backgroundReady) {
+          setTimeout(finish, 900)
+        } else {
+          // Wait for background to be ready. Show message and poll.
+          setLogs(prev => [...prev.slice(-4), `> WAITING FOR BACKGROUND ASSETS...`])
+          const waiter = setInterval(() => {
+            if (!mounted) return clearInterval(waiter)
+            if (backgroundReady) {
+              clearInterval(waiter)
+              setTimeout(finish, 600)
+            }
+          }, 200)
+        }
       }
-    }, 800) // Tốc độ chạy log (giảm để nhanh hơn demo chút)
-    return () => clearInterval(interval)
+    }
+
+    const starter = setTimeout(runTask, initialDelay)
+    return () => {
+      mounted = false
+      clearTimeout(starter)
+    }
   }, [onComplete])
 
   return (
-    <motion.div className="fixed inset-0 z-[10000] bg-black flex flex-col items-center justify-center font-mono text-[#00ff88] p-10 cursor-none" exit={{ opacity: 0, scale: 1.1, filter: "blur(20px)" }} transition={{ duration: 0.8 }}>
-      <div className="relative w-64 h-64 flex items-center justify-center mb-12">
-         <motion.div className="absolute inset-0 border-4 border-[#00ff88]/20 rounded-full border-t-[#00ff88]" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} />
-         <motion.div className="absolute inset-4 border-2 border-dashed border-[#00ff88]/40 rounded-full" animate={{ rotate: -360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} />
-         <div className="text-4xl font-black tracking-tighter animate-pulse">{Math.round(progress)}%</div>
+    <motion.div className="fixed inset-0 z-[10000] bg-black flex flex-col items-center justify-center font-mono text-[#00ff88] p-6 cursor-none" exit={{ opacity: 0, scale: 1.05, filter: "blur(16px)" }} transition={{ duration: 0.6 }}>
+      {/* Animated starfield (simple CSS + elements) */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,255,136,0.02),transparent_40%)]" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          {[...Array(18)].map((_, i) => (
+            <div key={i} className={`w-[2px] h-[2px] bg-white/60 rounded-full absolute animate-[twinkle_2s_${(i%5)+1}s_infinite]`} style={{ left: `${(i * 7) % 100}%`, top: `${(i * 13) % 100}%`, opacity: 0.7 }} />
+          ))}
+        </div>
       </div>
-      <div className="w-full max-w-md h-2 bg-gray-900 rounded-full overflow-hidden mb-6 border border-white/10"><motion.div className="h-full bg-[#00ff88] shadow-[0_0_20px_#00ff88]" initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ ease: "linear" }} /></div>
-      <div className="h-32 w-full max-w-md overflow-hidden flex flex-col justify-end text-xs md:text-sm text-gray-400 space-y-1">{logs.map((log, i) => (<motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="border-l-2 border-[#00ff88] pl-2">{log}</motion.div>))}</div>
-      <div className="absolute bottom-10 text-[10px] text-gray-600 tracking-[0.5em] uppercase">QuocBank Interstellar Systems © 2077</div>
+
+      <div className="relative w-60 h-60 flex items-center justify-center mb-8">
+        <motion.div className="absolute inset-0 rounded-full border border-[#00ff88]/10" animate={{ rotate: 360 }} transition={{ duration: 12, repeat: Infinity, ease: "linear" }} />
+        <motion.div className="absolute inset-6 rounded-full border-2 border-dashed border-[#00ff88]/30" animate={{ rotate: -360 }} transition={{ duration: 6, repeat: Infinity, ease: "linear" }} />
+        <motion.div className="absolute inset-16 rounded-full bg-[#00ff88]/8 blur-[8px]" animate={{ scale: [0.9, 1.05, 0.9] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} />
+        <div className="text-5xl font-black tracking-tighter drop-shadow-md">{Math.round(progress)}%</div>
+      </div>
+
+      <div className="w-full max-w-md h-3 bg-gray-900 rounded-full overflow-hidden mb-6 border border-white/10">
+        <motion.div className="h-full bg-[#00ff88] shadow-[0_0_24px_#00ff88]" initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ type: 'tween', duration: 0.6 }} />
+      </div>
+
+      <div className="h-36 w-full max-w-md overflow-hidden flex flex-col justify-end text-xs md:text-sm text-gray-400 space-y-2">
+        {logs.map((log, i) => (
+          <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="border-l-2 border-[#00ff88] pl-3 py-0.5 rounded-sm bg-black/20">
+            {log}
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="absolute bottom-6 text-[10px] text-gray-600 tracking-[0.5em] uppercase">QuocBank Interstellar Systems © 2077</div>
     </motion.div>
   )
 }
@@ -577,6 +636,7 @@ export default function LandingPage() {
   
   const [isDemoOpen, setIsDemoOpen] = useState(false)
   const [isSystemBooted, setIsSystemBooted] = useState(false)
+  const [backgroundReady, setBackgroundReady] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [skeletonWidths, setSkeletonWidths] = useState<number[]>([])
 
@@ -592,6 +652,22 @@ export default function LandingPage() {
     return () => cancelAnimationFrame(raf)
   }, [])
 
+  // Preload large background texture so loader can wait for it
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      // server-side: assume ready to avoid blocking build
+      setBackgroundReady(true)
+      return
+    }
+
+    let cancelled = false
+    const img = new window.Image()
+    img.src = '/textures/stars_milky_way.jpg'
+    img.onload = () => { if (!cancelled) setBackgroundReady(true) }
+    img.onerror = () => { if (!cancelled) setBackgroundReady(true) }
+    return () => { cancelled = true }
+  }, [])
+
   if (!mounted) return null
 
   return (
@@ -599,7 +675,7 @@ export default function LandingPage() {
       
       {/* 1. BOOT LOADER */}
       <AnimatePresence>
-        {!isSystemBooted && <SystemBootLoader onComplete={() => setIsSystemBooted(true)} />}
+        {!isSystemBooted && <SystemBootLoader backgroundReady={backgroundReady} onComplete={() => setIsSystemBooted(true)} />}
       </AnimatePresence>
 
       {/* 2. MAIN CONTENT (Hidden until booted) */}
