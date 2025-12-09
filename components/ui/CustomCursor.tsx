@@ -59,7 +59,6 @@ export function CustomCursor() {
       window.removeEventListener('mousemove', handleMove)
       window.removeEventListener('mouseenter', handleEnter)
       window.removeEventListener('mouseleave', handleLeave)
-      window.removeEventListener('mouseover', handleOver)
       document.body.classList.remove('use-custom-cursor')
       document.body.classList.remove('use-custom-cursor-native')
     }
