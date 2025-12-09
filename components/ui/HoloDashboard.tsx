@@ -56,7 +56,13 @@ function DataSatellite({
       />
 
       {/* Icon tròn */}
-      <div className={`w-10 h-10 rounded-full bg-black/60 border border-${color} flex items-center justify-center shadow-[0_0_15px_${color}] backdrop-blur-sm`}>
+      <div 
+        className="w-10 h-10 rounded-full bg-black/60 border flex items-center justify-center backdrop-blur-sm"
+        style={{ 
+          borderColor: color,
+          boxShadow: `0 0 15px ${color}`
+        }}
+      >
         <Icon size={18} style={{ color }} />
       </div>
 
