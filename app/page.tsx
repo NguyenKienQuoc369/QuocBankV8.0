@@ -660,11 +660,32 @@ export default function LandingPage() {
       return
     }
 
+    // If a previous session already loaded the background, reuse that
+    try {
+      const stored = sessionStorage.getItem('quocbank_bg_ready')
+      if (stored === '1') {
+        setBackgroundReady(true)
+        return
+      }
+    } catch (e) {
+      // ignore sessionStorage errors
+    }
+
     let cancelled = false
     const img = new window.Image()
     img.src = '/textures/stars_milky_way.jpg'
-    img.onload = () => { if (!cancelled) setBackgroundReady(true) }
-    img.onerror = () => { if (!cancelled) setBackgroundReady(true) }
+    img.onload = () => {
+      if (!cancelled) {
+        setBackgroundReady(true)
+        try { sessionStorage.setItem('quocbank_bg_ready', '1') } catch (e) {}
+      }
+    }
+    img.onerror = () => {
+      if (!cancelled) {
+        setBackgroundReady(true)
+        try { sessionStorage.setItem('quocbank_bg_ready', '1') } catch (e) {}
+      }
+    }
     return () => { cancelled = true }
   }, [])
 

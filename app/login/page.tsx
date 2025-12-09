@@ -9,7 +9,7 @@ import { login } from '@/app/actions/auth'
 import { 
   LogIn, Key, User, Loader2, ShieldCheck, 
   Cpu, Zap, Globe, ScanFace, Lock, AlertTriangle, 
-  Terminal, Activity, CheckCircle
+  Terminal, Activity, CheckCircle, ChevronLeft
 } from 'lucide-react'
 
 // --- 1. CONFIG & UTILS ---
@@ -352,6 +352,14 @@ export default function LoginPage() {
             
             {/* Header Form */}
             <div className="mb-10 text-center lg:text-left">
+              <div className="mb-6">
+                <Link href="/" className="inline-flex items-center gap-3 text-white/50 hover:text-white transition-colors mb-2">
+                  <div className="p-1 rounded-full border border-white/10 transition-colors">
+                    <ChevronLeft size={16} />
+                  </div>
+                  <span className="text-xs font-mono">QUAY LẠI TRANG CHỦ</span>
+                </Link>
+              </div>
               <h2 className="text-4xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">
                 CHÀO MỪNG TRỞ LẠI
               </h2>
