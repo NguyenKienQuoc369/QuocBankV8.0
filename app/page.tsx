@@ -129,7 +129,7 @@ const staggerContainer: Variants = {
 const CosmicCursor = () => {
   return (
     <>
-      <style jsx global>{` body, a, button, input, textarea { cursor: url('/cursor.png') 8 8, auto !important; } `}</style>
+      <style jsx global>{` body, a, button, input, textarea { cursor: url('/cursor-small.png') 16 16, auto !important; } `}</style>
     </>
   )
 }
