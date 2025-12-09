@@ -495,11 +495,11 @@ export default function LandingPage() {
                 </div>
               </FloatingElement>
               <div>
-                <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-[0.9] mb-6 text-shadow-glow">
+                <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.95] mb-6 text-shadow-glow">
                   <span className="block text-white mb-2">NGÂN HÀNG</span>
                   <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#00ff88] via-emerald-300 to-cyan-500 pb-4">ĐA VŨ TRỤ</span>
                 </motion.h1>
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="text-lg md:text-2xl text-gray-400 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light border-l-4 border-[#00ff88] pl-6">Kỷ nguyên tài chính mới. <br/>Chuyển tiền <span className="text-white font-semibold">tốc độ ánh sáng</span>. Bảo mật <span className="text-white font-semibold">lượng tử</span>.</motion.p>
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="text-base md:text-xl text-gray-400 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light border-l-4 border-[#00ff88] pl-6">Kỷ nguyên tài chính mới. <br/>Chuyển tiền <span className="text-white font-semibold">tốc độ ánh sáng</span>. Bảo mật <span className="text-white font-semibold">lượng tử</span>.</motion.p>
               </div>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="flex flex-col sm:flex-row items-center gap-6 w-full sm:w-auto justify-center lg:justify-start pt-4">
                 <Link href="/register"><MagneticButton className="w-full px-10 py-5 rounded-2xl bg-[#00ff88] text-black font-bold text-lg hover:bg-[#00cc6a] shadow-[0_0_40px_rgba(0,255,136,0.4)] flex items-center justify-center gap-3"><Rocket size={24} /> <HyperText text="KHỞI TẠO VÍ NGAY" className="text-black font-black tracking-wide" /></MagneticButton></Link>
