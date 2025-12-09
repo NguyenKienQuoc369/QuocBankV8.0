@@ -665,6 +665,9 @@ export default function LandingPage() {
       const stored = sessionStorage.getItem('quocbank_bg_ready')
       if (stored === '1') {
         setBackgroundReady(true)
+        // If the background was already loaded in a previous session,
+        // skip the simulated boot loader so returning users don't see it again.
+        setIsSystemBooted(true)
         return
       }
     } catch (e) {
