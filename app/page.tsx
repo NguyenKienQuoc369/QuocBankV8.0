@@ -45,6 +45,7 @@ import { FloatingElement } from '@/components/ui/FloatingElement'
 import { CosmicLogo } from '@/components/ui/CosmicLogo'
 import { TechUniverse } from '@/components/ui/TechUniverse'
 import { HoloDashboard } from '@/components/ui/HoloDashboard'
+import { CustomCursor } from '@/components/ui/CustomCursor'
 // --- ICONS (LUCIDE REACT) ---
 import { 
   ArrowRight, ShieldCheck, Zap, Globe, Rocket, PlayCircle, 
@@ -124,15 +125,8 @@ const staggerContainer: Variants = {
 
 // TextDecode: moved to `components/ui/TextDecode`
 
-// 3.4. COSMIC CURSOR (replaced by user-supplied cursor.png)
-// Use the `cursor.png` in the public folder as the system cursor.
-const CosmicCursor = () => {
-  return (
-    <>
-      <style jsx global>{` body, a, button, input, textarea { cursor: url('/cursor-small.png') 16 16, auto !important; } `}</style>
-    </>
-  )
-}
+// 3.4. CUSTOM CURSOR
+// Implemented in `components/ui/CustomCursor`
 
 // 3.5 / 3.6: ClickSpark and ScrollRocket moved to `components/ui`
 // Using the imported `ClickSpark` and `ScrollRocket` components instead
@@ -403,7 +397,7 @@ export default function LandingPage() {
   if (!mounted) return null
 
   return (
-    <div ref={targetRef} className="min-h-screen flex flex-col font-sans text-white bg-[#050505] selection:bg-[#00ff88] selection:text-black cursor-none overflow-x-hidden">
+    <div ref={targetRef} className="min-h-screen flex flex-col font-sans text-white bg-[#050505] selection:bg-[#00ff88] selection:text-black overflow-x-hidden">
       
       {/* 1. BOOT LOADER */}
       <AnimatePresence>
@@ -414,7 +408,7 @@ export default function LandingPage() {
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: isSystemBooted ? 1 : 0 }} transition={{ duration: 1 }} className="flex flex-col min-h-screen">
         
         {/* GLOBAL UTILS */}
-        <CosmicCursor />
+        <CustomCursor />
         <ClickSpark />
           {/* Scroll Rocket Embedded */}
           <ScrollRocket />
