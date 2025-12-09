@@ -6,7 +6,6 @@ import { motion, useSpring } from 'framer-motion'
 export function CustomCursor() {
   const [pos, setPos] = useState({ x: -100, y: -100 })
   const [visible, setVisible] = useState(true)
-  const [isInteractive, setIsInteractive] = useState(false)
 
   // Smooth the motion with springs
   const springX = useSpring(pos.x, { stiffness: 300, damping: 30 })
@@ -15,38 +14,11 @@ export function CustomCursor() {
   useEffect(() => {
     const handleMove = (e: MouseEvent) => {
       setPos({ x: e.clientX, y: e.clientY })
-
-      // Determine the real element under the pointer to avoid false positives
-      // (some child nodes or SVGs inside buttons may confuse `mouseover` events).
-      try {
-        const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null
-        if (el) {
-          const tag = el.tagName
-          const isControl = !!(
-            el.closest('a') ||
-            el.closest('button') ||
-            tag === 'INPUT' ||
-            tag === 'TEXTAREA' ||
-            tag === 'SELECT' ||
-            el.getAttribute('contenteditable') === 'true'
-          )
-          setIsInteractive(isControl)
-          if (isControl) document.body.classList.add('use-custom-cursor-native')
-          else document.body.classList.remove('use-custom-cursor-native')
-        } else {
-          setIsInteractive(false)
-          document.body.classList.remove('use-custom-cursor-native')
-        }
-      } catch (err) {
-        // elementFromPoint can throw in odd circumstances in some browsers; ignore
-      }
     }
 
     const handleEnter = () => setVisible(true)
     const handleLeave = () => {
       setVisible(false)
-      setIsInteractive(false)
-      document.body.classList.remove('use-custom-cursor-native')
     }
 
     // enable custom cursor on body
@@ -60,7 +32,6 @@ export function CustomCursor() {
       window.removeEventListener('mouseenter', handleEnter)
       window.removeEventListener('mouseleave', handleLeave)
       document.body.classList.remove('use-custom-cursor')
-      document.body.classList.remove('use-custom-cursor-native')
     }
   }, [])
 
@@ -69,8 +40,6 @@ export function CustomCursor() {
       <style jsx global>{`
         /* hide native cursor site-wide while mouse is present */
         body.use-custom-cursor, body.use-custom-cursor * { cursor: none !important; }
-        /* when an interactive control is detected, restore native cursor for that area */
-        body.use-custom-cursor.use-custom-cursor-native * { cursor: auto !important; }
       `}</style>
 
       <motion.div
@@ -78,7 +47,7 @@ export function CustomCursor() {
         style={{ x: springX, y: springY }}
         className="pointer-events-none fixed z-[9999] left-0 top-0"
         initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: visible && !isInteractive ? 1 : 0, scale: visible ? 1 : 0.6 }}
+        animate={{ opacity: visible ? 1 : 0, scale: visible ? 1 : 0.6 }}
         transition={{ type: 'spring', stiffness: 400, damping: 40 }}
       >
         <div style={{ transform: 'translate(-50%, -50%)' }}>
