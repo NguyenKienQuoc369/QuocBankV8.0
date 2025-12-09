@@ -124,44 +124,12 @@ const staggerContainer: Variants = {
 
 // TextDecode: moved to `components/ui/TextDecode`
 
-// 3.4. COSMIC CURSOR (Custom Mouse)
+// 3.4. COSMIC CURSOR (replaced by user-supplied cursor.png)
+// Use the `cursor.png` in the public folder as the system cursor.
 const CosmicCursor = () => {
-  const [isHovering, setIsHovering] = useState(false)
-  const mouseX = useMotionValue(-100)
-  const mouseY = useMotionValue(-100)
-  const springX = useSpring(mouseX, { damping: 25, stiffness: 700 })
-  const springY = useSpring(mouseY, { damping: 25, stiffness: 700 })
-
-  useEffect(() => {
-    const moveCursor = (e: MouseEvent) => {
-      mouseX.set(e.clientX)
-      mouseY.set(e.clientY)
-      const target = e.target as HTMLElement
-      const isClickable = target.closest('button') || target.closest('a') || target.closest('.cursor-pointer')
-      setIsHovering(!!isClickable)
-    }
-    window.addEventListener('mousemove', moveCursor)
-    return () => window.removeEventListener('mousemove', moveCursor)
-  }, [mouseX, mouseY])
-
   return (
     <>
-      <style jsx global>{` body, a, button, input, textarea { cursor: none !important; } `}</style>
-      <motion.div
-        className="fixed top-0 left-0 w-2 h-2 bg-[#00ff88] rounded-full pointer-events-none z-[9999] mix-blend-difference"
-        style={{ x: mouseX, y: mouseY, translateX: '-50%', translateY: '-50%' }}
-      />
-      <motion.div
-        className="fixed top-0 left-0 border border-[#00ff88] rounded-full pointer-events-none z-[9998]"
-        style={{ x: springX, y: springY, translateX: '-50%', translateY: '-50%' }}
-        animate={{
-          width: isHovering ? 50 : 20,
-          height: isHovering ? 50 : 20,
-          opacity: isHovering ? 1 : 0.3,
-          borderColor: isHovering ? '#00ff88' : 'rgba(0, 255, 136, 0.3)',
-          scale: isHovering ? 1.2 : 1
-        }}
-      />
+      <style jsx global>{` body, a, button, input, textarea { cursor: url('/cursor.png') 8 8, auto !important; } `}</style>
     </>
   )
 }
