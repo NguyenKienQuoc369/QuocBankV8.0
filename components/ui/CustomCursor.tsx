@@ -15,27 +15,45 @@ export function CustomCursor() {
   useEffect(() => {
     const handleMove = (e: MouseEvent) => {
       setPos({ x: e.clientX, y: e.clientY })
+
+      // Determine the real element under the pointer to avoid false positives
+      // (some child nodes or SVGs inside buttons may confuse `mouseover` events).
+      try {
+        const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null
+        if (el) {
+          const tag = el.tagName
+          const isControl = !!(
+            el.closest('a') ||
+            el.closest('button') ||
+            tag === 'INPUT' ||
+            tag === 'TEXTAREA' ||
+            tag === 'SELECT' ||
+            el.getAttribute('contenteditable') === 'true'
+          )
+          setIsInteractive(isControl)
+          if (isControl) document.body.classList.add('use-custom-cursor-native')
+          else document.body.classList.remove('use-custom-cursor-native')
+        } else {
+          setIsInteractive(false)
+          document.body.classList.remove('use-custom-cursor-native')
+        }
+      } catch (err) {
+        // elementFromPoint can throw in odd circumstances in some browsers; ignore
+      }
     }
 
     const handleEnter = () => setVisible(true)
-    const handleLeave = () => setVisible(false)
-
-    const handleOver = (e: Event) => {
-      const target = e.target as HTMLElement | null
-      if (!target) return
-      const tag = target.tagName
-      const isControl = !!(target.closest('a') || target.closest('button') || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.getAttribute('contenteditable') === 'true')
-      setIsInteractive(isControl)
-      // toggle body class to let native cursor show on interactive elements
-      if (isControl) document.body.classList.add('use-custom-cursor-native')
-      else document.body.classList.remove('use-custom-cursor-native')
+    const handleLeave = () => {
+      setVisible(false)
+      setIsInteractive(false)
+      document.body.classList.remove('use-custom-cursor-native')
     }
 
+    // enable custom cursor on body
     document.body.classList.add('use-custom-cursor')
     window.addEventListener('mousemove', handleMove)
     window.addEventListener('mouseenter', handleEnter)
     window.addEventListener('mouseleave', handleLeave)
-    window.addEventListener('mouseover', handleOver)
 
     return () => {
       window.removeEventListener('mousemove', handleMove)
@@ -51,15 +69,9 @@ export function CustomCursor() {
     <>
       <style jsx global>{`
         /* hide native cursor site-wide while mouse is present */
-        body.use-custom-cursor * { cursor: none !important; }
-        /* allow native cursor on interactive controls when flagged */
-        body.use-custom-cursor.use-custom-cursor-native input,
-        body.use-custom-cursor.use-custom-cursor-native textarea,
-        body.use-custom-cursor.use-custom-cursor-native button,
-        body.use-custom-cursor.use-custom-cursor-native a,
-        body.use-custom-cursor.use-custom-cursor-native select {
-          cursor: auto !important;
-        }
+        body.use-custom-cursor, body.use-custom-cursor * { cursor: none !important; }
+        /* when an interactive control is detected, restore native cursor for that area */
+        body.use-custom-cursor.use-custom-cursor-native * { cursor: auto !important; }
       `}</style>
 
       <motion.div
