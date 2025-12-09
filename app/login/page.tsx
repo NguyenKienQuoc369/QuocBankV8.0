@@ -24,17 +24,19 @@ const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max 
 
 // --- 2. SUB-COMPONENTS (Thành phần con chi tiết) ---
 
-// 2.1. Nền Sao Băng & Bụi Vũ Trụ (Particle System)
-const StarField = () => {
-  // Tạo 50 ngôi sao ngẫu nhiên
-  const stars = Array.from({ length: 50 }).map((_, i) => ({
-    id: i,
-    x: randomInt(0, 100),
-    y: randomInt(0, 100),
-    size: Math.random() * 2 + 1,
-    duration: randomInt(3, 10),
-    delay: randomInt(0, 5)
-  }))
+// 2.1. Nền Sao Băng & Bụi Vũ Trụ (Particle System) - Optimized
+const StarField = React.memo(() => {
+  // Giảm từ 50 xuống 20 ngôi sao để tối ưu performance
+  const stars = React.useMemo(() => 
+    Array.from({ length: 20 }).map((_, i) => ({
+      id: i,
+      x: randomInt(0, 100),
+      y: randomInt(0, 100),
+      size: Math.random() * 2 + 1,
+      duration: randomInt(4, 8),
+      delay: randomInt(0, 4)
+    })), []
+  )
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -47,36 +49,39 @@ const StarField = () => {
             top: `${star.y}%`,
             width: star.size,
             height: star.size,
+            willChange: 'opacity, transform'
           }}
           animate={{
-            opacity: [0, 1, 0],
-            scale: [0.5, 1.5, 0.5],
+            opacity: [0, 0.8, 0],
+            scale: [0.5, 1.2, 0.5],
           }}
           transition={{
             duration: star.duration,
             repeat: Infinity,
             delay: star.delay,
-            ease: "easeInOut"
+            ease: "linear"
           }}
         />
       ))}
-      {/* Sao băng */}
+      {/* Sao băng - giảm tần suất */}
       <motion.div 
         className="absolute top-0 right-0 w-[300px] h-[1px] bg-gradient-to-l from-transparent via-cyan-400 to-transparent opacity-0"
         animate={{ 
           x: [-500, 1000], 
           y: [0, 500], 
-          opacity: [0, 1, 0] 
+          opacity: [0, 0.8, 0] 
         }}
-        transition={{ duration: 7, repeat: Infinity, delay: 2, ease: "linear" }}
-        style={{ rotate: 45 }}
+        transition={{ duration: 8, repeat: Infinity, delay: 3, ease: "linear" }}
+        style={{ rotate: 45, willChange: 'transform, opacity' }}
       />
     </div>
   )
-}
+})
 
-// 2.2. Lõi Lượng Tử (Quantum Core) - Thay thế AuthOrb cũ
-const QuantumCore = () => {
+StarField.displayName = 'StarField'
+
+// 2.2. Lõi Lượng Tử (Quantum Core) - Optimized
+const QuantumCore = React.memo(() => {
   return (
     <div className="relative w-72 h-72 flex items-center justify-center mx-auto">
       {/* Vòng ngoài cùng */}
@@ -84,18 +89,19 @@ const QuantumCore = () => {
         className="absolute inset-0 border border-indigo-500/30 rounded-full border-dashed"
         animate={{ rotate: 360 }}
         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        style={{ willChange: 'transform' }}
       />
       {/* Vòng giữa quay ngược */}
       <motion.div
         className="absolute inset-4 border-2 border-cyan-500/20 rounded-full"
-        style={{ borderTopColor: 'transparent', borderBottomColor: 'transparent' }}
+        style={{ borderTopColor: 'transparent', borderBottomColor: 'transparent', willChange: 'transform' }}
         animate={{ rotate: -360 }}
         transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
       />
       {/* Vòng trong cùng quay nhanh */}
       <motion.div
         className="absolute inset-10 border-4 border-indigo-400/10 rounded-full"
-        style={{ borderLeftColor: '#00ff88', borderRightColor: 'transparent' }}
+        style={{ borderLeftColor: '#00ff88', borderRightColor: 'transparent', willChange: 'transform' }}
         animate={{ rotate: 360 }}
         transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
       />
@@ -103,8 +109,9 @@ const QuantumCore = () => {
       <div className="absolute inset-0 flex items-center justify-center">
         <motion.div
           className="w-24 h-24 bg-gradient-to-br from-indigo-600 to-cyan-500 rounded-full blur-xl opacity-50"
-          animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
-          transition={{ duration: 4, repeat: Infinity }}
+          animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.7, 0.5] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          style={{ willChange: 'transform, opacity' }}
         />
         <div className="w-20 h-20 bg-black rounded-full border border-white/10 flex items-center justify-center absolute shadow-[0_0_50px_rgba(79,70,229,0.5)]">
            <Zap className="text-cyan-400 w-10 h-10 animate-pulse" />
@@ -116,49 +123,64 @@ const QuantumCore = () => {
         className="absolute w-full h-full"
         animate={{ rotate: 360 }}
         transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+        style={{ willChange: 'transform' }}
       >
          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rounded-full shadow-[0_0_15px_white]" />
       </motion.div>
     </div>
   )
-}
+})
 
-// 2.3. Terminal Khởi động (System Boot Logs)
-const SystemBootLog = () => {
+QuantumCore.displayName = 'QuantumCore'
+
+// 2.3. Terminal Khởi động (System Boot Logs) - Optimized
+const SystemBootLog = React.memo(() => {
   const [logs, setLogs] = useState<string[]>([])
-  const fullLogs = [
+  const fullLogs = React.useMemo(() => [
     "Khởi tạo giao thức bảo mật...",
     "Kết nối máy chủ vệ tinh V-9...",
     "Đang xác thực chữ ký lượng tử...",
     "Tải module giao diện người dùng...",
     "Trạng thái: SẴN SÀNG."
-  ]
+  ], [])
 
   useEffect(() => {
     let delay = 0
-    fullLogs.forEach((log, index) => {
-      delay += randomInt(300, 800)
-      setTimeout(() => {
+    const timeouts: NodeJS.Timeout[] = []
+    
+    fullLogs.forEach((log) => {
+      delay += randomInt(400, 600)
+      const timeout = setTimeout(() => {
         setLogs(prev => [...prev, `> ${log}`])
       }, delay)
+      timeouts.push(timeout)
     })
-  }, [])
+
+    return () => timeouts.forEach(clearTimeout)
+  }, [fullLogs])
 
   return (
     <div className="font-mono text-[10px] text-green-500/80 p-4 h-32 overflow-hidden flex flex-col justify-end bg-black/40 rounded-lg border border-green-500/20 shadow-inner">
       {logs.map((log, i) => (
-        <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
+        <motion.div 
+          key={i} 
+          initial={{ opacity: 0, x: -10 }} 
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.2 }}
+        >
           {log}
         </motion.div>
       ))}
       <motion.span 
         animate={{ opacity: [0, 1, 0] }} 
-        transition={{ duration: 0.5, repeat: Infinity }}
+        transition={{ duration: 0.6, repeat: Infinity, ease: "linear" }}
         className="text-green-400"
       >_</motion.span>
     </div>
   )
-}
+})
+
+SystemBootLog.displayName = 'SystemBootLog'
 
 // 2.4. Cyber Input (Ô nhập liệu tương lai)
 const CyberInput = ({ icon: Icon, type, name, placeholder, onFocus, onBlur, isFocused }: any) => {
@@ -225,19 +247,19 @@ export default function LoginPage() {
   const [isBooting, setIsBooting] = useState(true) // State khởi động
   const router = useRouter()
 
-  // Parallax Effect Logic
+  // Parallax Effect Logic - Optimized với throttle
   const mouseX = useMotionValue(0)
   const mouseY = useMotionValue(0)
-  const rotateX = useTransform(mouseY, [-500, 500], [5, -5]) // Nghiêng X
-  const rotateY = useTransform(mouseX, [-500, 500], [-5, 5]) // Nghiêng Y
+  const rotateX = useTransform(mouseY, [-500, 500], [3, -3]) // Giảm độ nghiêng
+  const rotateY = useTransform(mouseX, [-500, 500], [-3, 3])
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = React.useCallback((e: React.MouseEvent) => {
     const rect = e.currentTarget.getBoundingClientRect()
     const x = e.clientX - rect.left - rect.width / 2
     const y = e.clientY - rect.top - rect.height / 2
     mouseX.set(x)
     mouseY.set(y)
-  }
+  }, [mouseX, mouseY])
 
   // Kết thúc quá trình boot sau 2 giây
   useEffect(() => {
@@ -265,10 +287,10 @@ export default function LoginPage() {
 
       {/* --- MAIN CARD (PARALLAX CONTAINER) --- */}
       <motion.div 
-        style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-        initial={{ opacity: 0, scale: 0.9 }}
+        style={{ rotateX, rotateY, transformStyle: "preserve-3d", willChange: 'transform' }}
+        initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
         className="relative z-10 w-full max-w-6xl h-[700px] bg-black/60 backdrop-blur-2xl rounded-[2rem] border border-white/10 shadow-[0_0_100px_rgba(79,70,229,0.2)] overflow-hidden flex flex-col lg:flex-row group"
       >
         {/* Glow effect chạy quanh viền */}
