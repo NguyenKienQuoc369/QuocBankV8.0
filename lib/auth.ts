@@ -2,6 +2,7 @@
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
+import { prisma } from '@/lib/prisma'
 
 // Lấy secret key từ biến môi trường
 const secretKey = process.env.JWT_SECRET || 'quocbank-secret-key'
@@ -65,5 +66,21 @@ export async function getSession() {
   const cookieStore = await cookies() // <--- THÊM AWAIT Ở ĐÂY
   const token = cookieStore.get('session')?.value
   if (!token) return null
-  return await verifyToken(token)
+  const payload = await verifyToken(token)
+  if (!payload) return null
+
+  // Security: ensure the user still exists in the database.
+  // This prevents a valid JWT from granting access after the user record
+  // has been removed or disabled.
+  try {
+    const userId = (payload as any).id
+    if (!userId) return null
+    const user = await prisma.user.findUnique({ where: { id: String(userId) } })
+    if (!user) return null
+  } catch (err) {
+    // If DB check fails for any reason, treat as no session to be safe
+    return null
+  }
+
+  return payload
 }
