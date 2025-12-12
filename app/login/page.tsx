@@ -9,7 +9,7 @@ import { login } from '@/app/actions/auth'
 import { 
   LogIn, Key, User, Loader2, ShieldCheck, 
   Cpu, Zap, Globe, ScanFace, Lock, AlertTriangle, 
-  Terminal, Activity, CheckCircle, ChevronLeft
+  Terminal, Activity, CheckCircle, ChevronLeft, Eye, EyeOff
 } from 'lucide-react'
 
 // --- 1. CONFIG & UTILS ---
@@ -207,17 +207,52 @@ const CyberInput = ({ icon: Icon, type, name, placeholder, onFocus, onBlur, isFo
         </div>
 
         {/* Input chính */}
-        <input 
-          name={name} 
-          type={type} 
-          required
-          onFocus={onFocus}
-          onBlur={onBlur}
-          placeholder={placeholder}
-          className={`w-full bg-black/60 border-2 rounded-lg py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none transition-all duration-300 font-mono text-sm
-            ${isFocused ? 'border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.2)]' : 'border-white/10 hover:border-white/20'}
-          `}
-        />
+        {/* local state for showing password */}
+        {(() => {
+          const [show, setShow] = React.useState(false)
+          const inputType = type === 'password' ? (show ? 'text' : 'password') : type
+          return (
+            <>
+              <input 
+                name={name} 
+                type={inputType} 
+                required
+                onFocus={onFocus}
+                onBlur={onBlur}
+                placeholder={placeholder}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    const target = e.target as HTMLElement
+                    const form = target.closest('form')
+                    if (!form) return
+                    const focusables = Array.from(form.querySelectorAll<HTMLInputElement | HTMLButtonElement | HTMLTextAreaElement | HTMLSelectElement>('input:not([type=hidden]):not([disabled]), button:not([disabled]), textarea, select'))
+                    const idx = focusables.findIndex(f => f === target)
+                    if (idx >= 0 && idx < focusables.length - 1) {
+                      const next = focusables[idx + 1] as HTMLElement
+                      next.focus()
+                      if ((next as HTMLInputElement).select) try { (next as HTMLInputElement).select() } catch {}
+                    } else {
+                      const submit = focusables.find(f => (f as HTMLButtonElement).getAttribute && (f as HTMLButtonElement).getAttribute('type') === 'submit') as HTMLButtonElement | undefined
+                      if (submit) submit.click()
+                      else (form as HTMLFormElement).submit()
+                    }
+                  }
+                }}
+                className={`w-full bg-black/60 border-2 rounded-lg py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none transition-all duration-300 font-mono text-sm
+                  ${isFocused ? 'border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.2)]' : 'border-white/10 hover:border-white/20'}
+                `}
+              />
+
+              {/* eye toggle for password fields */}
+              {type === 'password' && (
+                <button type="button" aria-label={show ? 'Hide password' : 'Show password'} onClick={() => setShow(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-300 hover:text-white">
+                  {show ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              )}
+            </>
+          )
+        })()}
 
         {/* Thanh trạng thái bên phải */}
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-[2px]">

@@ -13,10 +13,10 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
 import { register } from '@/app/actions/auth'
 import { 
-  User, Mail, Lock, Loader2, Rocket, 
-  CreditCard, ShieldCheck, CheckCircle2, 
-  Fingerprint, Scan, AlertTriangle, ArrowRight, 
-  Cpu, Globe, ChevronRight, ChevronLeft, Terminal, Check
+   User, Mail, Lock, Loader2, Rocket, 
+   CreditCard, ShieldCheck, CheckCircle2, 
+   Fingerprint, Scan, AlertTriangle, ArrowRight, 
+   Cpu, Globe, ChevronRight, ChevronLeft, Terminal, Check, Eye, EyeOff
 } from 'lucide-react'
 
 // --- 1. CONFIG & TYPES ---
@@ -149,8 +149,11 @@ const HologramIDCard = ({ name, username, step }: { name: string, username: stri
 }
 
 // 2.3. Cyber Input (Ô nhập liệu có animation)
-const CyberInput = ({ icon: Icon, type, name, placeholder, label, value, onChange, onFocus, onBlur, isFocused, error }: any) => (
-  <div className="space-y-1 group relative">
+const CyberInput = ({ icon: Icon, type, name, placeholder, label, value, onChange, onFocus, onBlur, isFocused, error }: any) => {
+   const [show, setShow] = useState(false)
+   const inputType = type === 'password' ? (show ? 'text' : 'password') : type
+   return (
+   <div className="space-y-1 group relative">
     <div className="flex justify-between items-end px-1">
        <label className={`text-[10px] font-bold uppercase tracking-widest transition-colors ${isFocused ? 'text-[#00ff88]' : 'text-gray-500'}`}>
           {label}
@@ -164,12 +167,31 @@ const CyberInput = ({ icon: Icon, type, name, placeholder, label, value, onChang
        </div>
        <input 
           name={name}
-          type={type}
+          type={inputType}
           value={value}
           onChange={onChange}
           onFocus={onFocus}
           onBlur={onBlur}
           placeholder={placeholder}
+             onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                     e.preventDefault()
+                     const target = e.target as HTMLElement
+                     const form = target.closest('form')
+                     if (!form) return
+                     const focusables = Array.from(form.querySelectorAll<HTMLInputElement | HTMLButtonElement | HTMLTextAreaElement | HTMLSelectElement>('input:not([type=hidden]):not([disabled]), button:not([disabled]), textarea, select'))
+                     const idx = focusables.findIndex(f => f === target)
+                     if (idx >= 0 && idx < focusables.length - 1) {
+                        const next = focusables[idx + 1] as HTMLElement
+                        next.focus()
+                        if ((next as HTMLInputElement).select) try { (next as HTMLInputElement).select() } catch {}
+                     } else {
+                        const submit = focusables.find(f => (f as HTMLButtonElement).getAttribute && (f as HTMLButtonElement).getAttribute('type') === 'submit') as HTMLButtonElement | undefined
+                        if (submit) submit.click()
+                        else (form as HTMLFormElement).submit()
+                     }
+                  }
+               }}
           className={`w-full bg-black/40 border-2 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder-gray-700 focus:outline-none transition-all font-mono text-sm
              ${error 
                 ? 'border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)]' 
@@ -179,6 +201,13 @@ const CyberInput = ({ icon: Icon, type, name, placeholder, label, value, onChang
              }
           `}
        />
+
+       {/* eye toggle for password fields */}
+       {type === 'password' && (
+         <button type="button" aria-label={show ? 'Hide password' : 'Show password'} onClick={() => setShow(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-300 hover:text-white">
+           {show ? <EyeOff size={18} /> : <Eye size={18} />}
+         </button>
+       )}
        
        {/* Góc vuông trang trí (Reticle Corners) */}
        {isFocused && (
@@ -190,8 +219,9 @@ const CyberInput = ({ icon: Icon, type, name, placeholder, label, value, onChang
           </>
        )}
     </div>
-  </div>
-)
+   </div>
+   )
+}
 
 // 2.4. Thanh đo độ mạnh mật khẩu (Password Strength Meter)
 const PasswordStrength = ({ password }: { password: string }) => {
