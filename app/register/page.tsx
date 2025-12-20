@@ -203,11 +203,11 @@ const CyberInput = ({ icon: Icon, type, name, placeholder, label, value, onChang
        />
 
        {/* eye toggle for password fields */}
-       {type === 'password' && (
-         <button type="button" aria-label={show ? 'Hide password' : 'Show password'} onClick={() => setShow(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-300 hover:text-white">
-           {show ? <EyeOff size={18} /> : <Eye size={18} />}
-         </button>
-       )}
+          {type === 'password' && (
+             <button type="button" aria-label={show ? 'Hide password' : 'Show password'} onClick={() => setShow(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-300 hover:text-white">
+                {show ? <Eye size={18} /> : <EyeOff size={18} />}
+             </button>
+          )}
        
        {/* Góc vuông trang trí (Reticle Corners) */}
        {isFocused && (

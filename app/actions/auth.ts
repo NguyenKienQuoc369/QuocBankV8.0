@@ -1,3 +1,4 @@
+// File: app/actions/auth.ts
 'use server'
 
 import { prisma } from '@/lib/prisma'
@@ -7,67 +8,69 @@ import { hashPassword, createToken, setSessionCookie, verifyPassword, clearSessi
 import { generateAccountNumber, generateCardNumber, generateCVV } from '@/lib/utils'
 import { redirect } from 'next/navigation'
 
-// --- VALIDATION SCHEMAS (Luật lệ dữ liệu) ---
+// --- 1. CẬP NHẬT VALIDATION SCHEMA ---
 const RegisterSchema = z.object({
   fullName: z.string().min(2, 'Họ tên phải có ít nhất 2 ký tự').trim(),
   username: z.string().min(4, 'Tên đăng nhập tối thiểu 4 ký tự')
     .regex(/^[a-zA-Z0-9_]+$/, 'Tên đăng nhập không được chứa ký tự đặc biệt'),
-  password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+  // CẬP NHẬT: Mật khẩu tối thiểu 8 ký tự theo yêu cầu
+  password: z.string().min(8, 'Mật khẩu phải có ít nhất 8 ký tự'), 
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Mật khẩu xác nhận không khớp",
   path: ["confirmPassword"],
 });
 
-// --- REGISTER ACTION ---
-export async function register(prevStateOrFormData?: FormData | unknown, formData?: FormData) {
+// --- 2. SỬA LẠI HÀM REGISTER ĐỂ TƯƠNG THÍCH useActionState ---
+export async function register(prevState: any, formData: FormData) {
   try {
-    const fd: FormData | undefined = (formData instanceof FormData)
-      ? formData
-      : (prevStateOrFormData instanceof FormData ? prevStateOrFormData : undefined)
-
-    const rawData = Object.fromEntries((fd || new FormData()).entries());
+    const rawData = Object.fromEntries(formData.entries());
     
-    // 1. Validate dữ liệu đầu vào
+    // Validate dữ liệu
     const validated = RegisterSchema.safeParse(rawData);
+    
     if (!validated.success) {
-      return {
-        success: false,
-        errors: validated.error.flatten().fieldErrors,
-        message: 'Dữ liệu không hợp lệ',
-        error: 'Dữ liệu không hợp lệ'
+      return { 
+        success: false, 
+        error: validated.error.issues[0].message 
       };
     }
 
     const { username, password, fullName } = validated.data;
 
-    // 2. Kiểm tra trùng lặp
-    const existingUser = await prisma.user.findUnique({ where: { username } });
+    // Kiểm tra tên đăng nhập đã tồn tại chưa
+    const existingUser = await prisma.user.findUnique({
+      where: { username }
+    });
+
     if (existingUser) {
-      return { success: false, message: 'Tên đăng nhập này đã tồn tại', error: 'Tên đăng nhập này đã tồn tại' };
+      return { success: false, error: 'Tên đăng nhập này đã được sử dụng' };
     }
 
     const hashedPassword = await hashPassword(password);
 
-    // 3. Thực thi Giao dịch (Transaction)
+    // Tạo User + Tài khoản + Thẻ trong 1 giao dịch (Transaction)
     await prisma.$transaction(async (tx) => {
-      // A. Tạo User
+      // Tạo User
       const user = await tx.user.create({
-        data: { username, password: hashedPassword, fullName }
+        data: {
+          username,
+          password: hashedPassword,
+          fullName,
+        }
       });
 
-      // B. Tạo Tài khoản
+      // Tạo Tài khoản thanh toán (Tặng 50k chào mừng)
       const account = await tx.account.create({
         data: {
           userId: user.id,
           accountNumber: generateAccountNumber(),
-          balance: 0,
-          isLocked: false,
-          // isDefault removed: not present in Prisma schema
+          balance: 50000, 
+          isLocked: false 
         }
       });
 
-      // C. Tạo Thẻ
+      // Tạo Thẻ ATM ảo
       await tx.card.create({
         data: {
           accountId: account.id,
@@ -78,57 +81,33 @@ export async function register(prevStateOrFormData?: FormData | unknown, formDat
           isLocked: false
         }
       });
-
-      // D. Thưởng chào mừng 50k
-      const WELCOME_AMOUNT = 50000;
-      await tx.transaction.create({
-        data: {
-          amount: WELCOME_AMOUNT,
-          description: 'Thưởng chào mừng thành viên mới',
-          status: 'SUCCESS', // Enum Prisma của anh có thể là COMPLETED hoặc SUCCESS, hãy check lại schema
-          type: 'DEPOSIT',
-          toAccountId: account.id,
-        }
-      });
-
-      // E. Cộng tiền vào tài khoản
-      await tx.account.update({
-        where: { id: account.id },
-        data: { balance: { increment: WELCOME_AMOUNT } }
-      });
     });
     
-    return { success: true, message: 'Đăng ký thành công! Đã cộng 50.000đ.' };
+    return { success: true };
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Register error:', error);
-    const message = error instanceof Error ? error.message : String(error);
-    return { success: false, message: 'Lỗi hệ thống: ' + message, error: message };
+    return { success: false, error: 'Lỗi hệ thống: ' + error.message };
   }
 }
 
-// --- LOGIN ACTION ---
-export async function login(prevStateOrFormData?: FormData | unknown, formData?: FormData) {
-  // Support two call styles:
-  //  - useActionState(login, null) => called with (prevState, formData)
-  //  - direct call login(formData) => called with (formData)
-  const fd: FormData | undefined = (formData instanceof FormData)
-    ? formData
-    : (prevStateOrFormData instanceof FormData ? prevStateOrFormData : undefined)
+// --- 3. SỬA LẠI HÀM LOGIN TƯƠNG TỰ ---
+export async function login(prevState: any, formData: FormData) {
+  const username = formData.get('username') as string;
+  const password = formData.get('password') as string;
 
-  const username = fd?.get('username') as string | undefined;
-  const password = fd?.get('password') as string | undefined;
-
-  if (!username || !password) return { success: false, message: 'Vui lòng nhập đầy đủ thông tin', error: 'Vui lòng nhập đầy đủ thông tin' };
+  if (!username || !password) {
+    return { success: false, error: 'Vui lòng nhập đầy đủ thông tin' };
+  }
 
   try {
     const user = await prisma.user.findUnique({ where: { username } });
 
     if (!user || !(await verifyPassword(password, user.password))) {
-      return { success: false, message: 'Sai tên đăng nhập hoặc mật khẩu', error: 'Sai tên đăng nhập hoặc mật khẩu' };
+      return { success: false, error: 'Sai tên đăng nhập hoặc mật khẩu' };
     }
 
-    // Tạo Session
+    // Tạo phiên đăng nhập
     const token = await createToken({
       id: user.id,
       username: user.username,
@@ -137,19 +116,16 @@ export async function login(prevStateOrFormData?: FormData | unknown, formData?:
     
     await setSessionCookie(token);
     
-    // Xóa cache để Dashboard cập nhật data mới nhất
-    revalidatePath('/dashboard'); 
-    
-    return { success: true, message: 'Đăng nhập thành công' };
+    // Không redirect ở đây để Client Component xử lý (tránh lỗi NEXT_REDIRECT)
+    return { success: true }; 
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error);
-    const message = error instanceof Error ? error.message : String(error);
-    return { success: false, message: 'Lỗi đăng nhập hệ thống', error: message };
+    return { success: false, error: 'Đăng nhập thất bại' };
   }
 }
 
-// --- LOGOUT ACTION ---
+// --- LOGOUT ---
 export async function logout() {
   await clearSessionCookie();
   redirect('/login');

@@ -6,8 +6,9 @@ import { FileText, Download } from 'lucide-react';
 export default async function ReportsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }> // Next.js 15 type
 }) {
+  // Await searchParams (Next.js 15 requirement)
   const params = await searchParams;
   const page = typeof params.page === 'string' ? Number(params.page) : 1;
   const type = typeof params.type === 'string' ? params.type : 'ALL';

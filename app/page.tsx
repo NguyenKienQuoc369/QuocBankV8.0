@@ -1,21 +1,6 @@
 'use client'
 
-/**
- * =================================================================================================
- * PROJECT: QUOCBANK INTERSTELLAR - LANDING PAGE
- * CODENAME: "THE SINGULARITY"
- * VERSION: 20.0.0 (MONOLITHIC ULTIMATE EDITION)
- * -------------------------------------------------------------------------------------------------
- * ARCHITECTURE OVERVIEW:
- * 1. KERNEL LAYER: Handles simulated boot sequences and global state.
- * 2. VISUAL LAYER: Canvas-based starfields, WebGL-like CSS3D transforms.
- * 3. DATA LAYER: Extensive mock data for simulated banking operations.
- * 4. UI LAYER: Modular components embedded directly for zero-dependency deployment.
- * -------------------------------------------------------------------------------------------------
- * AUTHOR: GEMINI AI
- * STATUS: PRODUCTION READY
- * =================================================================================================
- */
+// Trang chính
 
 import Link from 'next/link'
 import Image from 'next/image'
@@ -33,7 +18,7 @@ import {
   Variants 
 } from 'framer-motion'
 
-// Use the shared 3D cosmic background (Canvas + Environment)
+// (Canvas + Environment)
 import { CosmicBackground } from '@/components/ui/CosmicBackground'
 import { ScrollRocket } from '@/components/ui/ScrollRocket'
 import { ClickSpark } from '@/components/ui/ClickSpark'
@@ -112,36 +97,25 @@ const staggerContainer: Variants = {
     }
   }
 }
-
 // =============================================================================
-// SECTION 3: EMBEDDED UI COMPONENTS (NHÚNG TRỰC TIẾP)
-// =============================================================================
-
 // `CosmicLogo` moved to `components/ui/CosmicLogo`.
 // Use the imported `CosmicLogo` component instead of the inline SVG.
-
 // HyperText: moved to `components/ui/HyperText`
-
 // TextDecode: moved to `components/ui/TextDecode`
-
 // 3.4. CUSTOM CURSOR (removed)
-
 // 3.5 / 3.6: ClickSpark and ScrollRocket moved to `components/ui`
 // Using the imported `ClickSpark` and `ScrollRocket` components instead
 // of the inline implementations to reduce duplication and centralize behavior.
-
 // MagneticButton: moved to `components/ui/MagneticButton`
-
 // The full 3D Canvas cosmic background is provided by
 // `components/ui/CosmicBackground` (a client component using R3F).
 // The in-file placeholder was removed so we render the proper galaxy
 // background component imported from `components/ui`.
-
 // SpotlightCard: moved to `components/ui/SpotlightCard`
-
 // FloatingElement: moved to `components/ui/FloatingElement`
-
 // 3.11. SMART COUNTER (SSR Safe)
+
+
 function SmartCounter({ value, suffix = "", prefix = "" }: { value: number, suffix?: string, prefix?: string }) {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: "-100px" })

@@ -239,7 +239,7 @@ const CyberInput = ({ icon: Icon, type, name, placeholder, onFocus, onBlur, isFo
                     }
                   }
                 }}
-                className={`w-full bg-black/60 border-2 rounded-lg py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none transition-all duration-300 font-mono text-sm
+                className={`w-full bg-black/60 border-2 rounded-lg py-3 pl-12 pr-12 text-white placeholder-gray-600 focus:outline-none transition-all duration-300 font-mono text-sm
                   ${isFocused ? 'border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.2)]' : 'border-white/10 hover:border-white/20'}
                 `}
               />
@@ -247,7 +247,7 @@ const CyberInput = ({ icon: Icon, type, name, placeholder, onFocus, onBlur, isFo
               {/* eye toggle for password fields */}
               {type === 'password' && (
                 <button type="button" aria-label={show ? 'Hide password' : 'Show password'} onClick={() => setShow(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-300 hover:text-white">
-                  {show ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {show ? <Eye size={18} /> : <EyeOff size={18} />}
                 </button>
               )}
             </>
@@ -255,7 +255,7 @@ const CyberInput = ({ icon: Icon, type, name, placeholder, onFocus, onBlur, isFo
         })()}
 
         {/* Thanh trạng thái bên phải */}
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-[2px]">
+          <div className="absolute right-12 top-1/2 -translate-y-1/2 flex flex-col gap-[2px]">
            <div className={`w-1 h-1 rounded-full ${isFocused ? 'bg-green-500' : 'bg-gray-700'}`} />
            <div className={`w-1 h-1 rounded-full ${isFocused ? 'bg-green-500' : 'bg-gray-700'}`} />
            <div className={`w-1 h-1 rounded-full ${isFocused ? 'bg-green-500' : 'bg-gray-700'}`} />

@@ -93,3 +93,26 @@ model SavingsAccount {
 
   account      Account   @relation(fields: [accountId], references: [id])
 }
+// Nhà cung cấp dịch vụ (Điện, Nước, Net...)
+model BillProvider {
+  id          String   @id @default(cuid())
+  code        String   @unique // EVN, VIETTEL, etc.
+  name        String
+  category    BillCategory
+  logo        String?  // Icon name
+  serviceFee  Float    @default(0)
+  createdAt   DateTime @default(now())
+  
+  transactions Transaction[]
+}
+
+enum BillCategory {
+  ELECTRIC
+  WATER
+  INTERNET
+  TELEVISION
+}
+
+// Cập nhật lại model Transaction để link với BillProvider
+// billProviderId String?
+// billProvider   BillProvider? @relation(fields: [billProviderId], references: [id])
