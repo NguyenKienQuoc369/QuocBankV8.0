@@ -76,8 +76,13 @@ model Transaction {
   toAccountId   String?
   toAccount     Account? @relation("ReceivedTransactions", fields: [toAccountId], references: [id])
 
+  // Bill Provider (for utility payments)
+  billProviderId String?
+  billProvider   BillProvider? @relation(fields: [billProviderId], references: [id])
+
   @@index([fromAccountId])
   @@index([toAccountId])
+  @@index([billProviderId])
 }
 
 // 5. Sổ tiết kiệm
@@ -112,7 +117,3 @@ enum BillCategory {
   INTERNET
   TELEVISION
 }
-
-// Cập nhật lại model Transaction để link với BillProvider
-// billProviderId String?
-// billProvider   BillProvider? @relation(fields: [billProviderId], references: [id])
