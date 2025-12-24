@@ -1,7 +1,7 @@
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
-import { TopUpForm } from '@/components/topup/TopUpForm';
+import { DepositLocations } from '@/components/topup/DepositLocations';
 
 export default async function TopUpPage() {
   const payload = await getSession();
