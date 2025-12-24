@@ -45,13 +45,30 @@ export async function payBill(prevStateOrFormData?: FormData | unknown, formData
 
       await tx.account.update({ where: { id: account.id }, data: { balance: { decrement: amount } } })
 
-      await tx.transaction.create({
+      const transaction = await tx.transaction.create({
         data: {
           amount,
           description: `Thanh toán: ${provider?.name} - Mã KH: ${customerCode}`,
           status: 'SUCCESS',
           type: 'BILL_PAYMENT',
           fromAccountId: account.id,
+        }
+      })
+
+      // Thêm cashback 0.5%
+      const cashbackAmount = amount * 0.005
+      await tx.account.update({
+        where: { id: account.id },
+        data: { cashbackBalance: { increment: cashbackAmount } }
+      })
+
+      await tx.cashbackHistory.create({
+        data: {
+          accountId: account.id,
+          transactionId: transaction.id,
+          amount: cashbackAmount,
+          source: 'BILL_PAYMENT',
+          status: 'PENDING',
         }
       })
     })

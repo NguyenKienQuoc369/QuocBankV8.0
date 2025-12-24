@@ -101,10 +101,65 @@ export async function login(prevState: any, formData: FormData) {
   }
 
   try {
-    const user = await prisma.user.findUnique({ where: { username } });
+    const user = await prisma.user.findUnique({ 
+      where: { username }
+    });
 
     if (!user || !(await verifyPassword(password, user.password))) {
       return { success: false, error: 'Sai tên đăng nhập hoặc mật khẩu' };
+    }
+
+    // Lấy thông tin tài khoản của user
+    const account = await prisma.account.findFirst({
+      where: { userId: user.id }
+    });
+
+    // Kiểm tra xem user có PIN hay không - sử dụng raw query
+    let hasPin = false;
+    if (account) {
+      const accountWithPin = await prisma.account.findUnique({
+        where: { id: account.id }
+      }) as any;
+      hasPin = !!accountWithPin?.pin;
+    }
+
+    if (hasPin && account) {
+      // Nếu có PIN, trả về message cần xác thực PIN
+      return { 
+        success: false,
+        requiresPin: true,
+        userId: user.id,
+        accountId: account.id,
+        message: 'Vui lòng xác thực mã PIN để hoàn tất đăng nhập'
+      };
+    }
+
+    // Nếu không có PIN, tạo phiên đăng nhập ngay
+    const token = await createToken({
+      id: user.id,
+      username: user.username,
+      fullName: user.fullName,
+    });
+    
+    await setSessionCookie(token);
+    return { success: true }; 
+
+  } catch (error: any) {
+    console.error('Login error:', error);
+    return { success: false, error: 'Đăng nhập thất bại' };
+  }
+}
+
+// --- LOGIN WITH PIN ---
+export async function loginWithPin(userId: string, accountId: string) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, username: true, fullName: true }
+    });
+
+    if (!user) {
+      return { success: false, error: 'Người dùng không tồn tại' };
     }
 
     // Tạo phiên đăng nhập
@@ -115,13 +170,10 @@ export async function login(prevState: any, formData: FormData) {
     });
     
     await setSessionCookie(token);
-    
-    // Không redirect ở đây để Client Component xử lý (tránh lỗi NEXT_REDIRECT)
-    return { success: true }; 
-
+    return { success: true };
   } catch (error: any) {
-    console.error('Login error:', error);
-    return { success: false, error: 'Đăng nhập thất bại' };
+    console.error('Login with PIN error:', error);
+    return { success: false, error: 'Không thể hoàn tất đăng nhập' };
   }
 }
 

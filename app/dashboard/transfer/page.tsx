@@ -1,17 +1,33 @@
 'use client'
 
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, User, Wallet, Zap, CheckCircle } from 'lucide-react';
 import { transferMoney } from '@/actions/transaction';
 import { FloatingInput } from '@/components/auth/FloatingInput';
 import { WarpSpeed } from '@/components/ui/WarpSpeed';
+import { PinVerification } from '@/components/security/PinVerification';
+import { getDashboardData } from '@/actions/dashboard';
 
 export default function TransferPage() {
   const [state, formAction, isPending] = useActionState(transferMoney, null);
   const [showWarp, setShowWarp] = useState(false);
+  const [showPinVerification, setShowPinVerification] = useState(false);
+  const [accountId, setAccountId] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const { reset, register, watch } = useForm();
+
+  // Lấy accountId khi component mount
+  useEffect(() => {
+    const fetchAccountId = async () => {
+      const data = await getDashboardData();
+      if (data?.account?.id) {
+        setAccountId(data.account.id);
+      }
+    };
+    fetchAccountId();
+  }, []);
 
   // Kích hoạt Warp Speed khi đang gửi
   useEffect(() => {
@@ -28,8 +44,39 @@ export default function TransferPage() {
 
   // Reset form khi thành công
   useEffect(() => {
-    if (state?.success) reset();
+    if (state?.success) {
+      reset();
+    }
   }, [state?.success, reset]);
+
+  // Handle form submit dengan PIN verification
+  const [pinVerified, setPinVerified] = useState(false);
+
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    if (pinVerified) {
+      // Allow form to submit normally
+      setPinVerified(false);
+      return;
+    }
+    e.preventDefault();
+    setShowPinVerification(true);
+  };
+
+  // Handle PIN verified - proceed with transfer
+  const handlePinVerified = () => {
+    setShowPinVerification(false);
+    setPinVerified(true);
+    // Submit form after marking as verified
+    if (formRef.current) {
+      const submitButton = formRef.current.querySelector('button[type="submit"]') as HTMLButtonElement;
+      submitButton?.click();
+    }
+  };
+
+  // Handle PIN verification cancelled
+  const handlePinCancelled = () => {
+    setShowPinVerification(false);
+  };
 
   // Tính phí động 0.5% (có thể override bằng NEXT_PUBLIC_TRANSFER_FEE_RATE)
   const amountRaw = watch('amount');
@@ -41,6 +88,17 @@ export default function TransferPage() {
   return (
     <div className="max-w-2xl mx-auto py-10 relative">
       
+      {/* PIN Verification Modal */}
+      {showPinVerification && accountId && (
+        <PinVerification
+          accountId={accountId}
+          onVerified={handlePinVerified}
+          onCancel={handlePinCancelled}
+          title="Xác thực chuyển tiền"
+          description="Nhập mã PIN để xác nhận giao dịch chuyển tiền"
+        />
+      )}
+
       {/* HIỆU ỨNG VŨ TRỤ */}
       <WarpSpeed active={showWarp} />
 
@@ -78,7 +136,7 @@ export default function TransferPage() {
           </motion.div>
         ) : (
           // FORM NHẬP LIỆU
-          <form action={formAction} className="space-y-6 relative z-10">
+          <form ref={formRef} action={formAction} onSubmit={handleFormSubmit} className="space-y-6 relative z-10">
             
             <div className="grid gap-6">
               {/* Người nhận */}
@@ -133,6 +191,7 @@ export default function TransferPage() {
 
             {/* Nút Gửi - NÚT PHÓNG */}
             <button 
+              type="submit"
               disabled={isPending}
               className={`
                 w-full py-5 rounded-2xl font-bold text-lg uppercase tracking-widest transition-all duration-300 relative overflow-hidden group

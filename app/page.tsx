@@ -7,7 +7,6 @@ import Image from 'next/image'
 import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react'
 import { 
   motion, 
-  useScroll, 
   useTransform, 
   useSpring, 
   useInView, 
@@ -303,10 +302,12 @@ const SystemBootLoader = ({ onComplete, backgroundReady }: { onComplete: () => v
 
 export default function LandingPage() {
   const targetRef = useRef<HTMLDivElement>(null)
-  const { scrollYProgress } = useScroll({ target: targetRef, offset: ["start start", "end start"] })
-  const yHero = useTransform(scrollYProgress, [0, 1], ["0%", "50%"])
-  const opacityHero = useTransform(scrollYProgress, [0, 0.5], [1, 0])
-  const rocketTop = useTransform(scrollYProgress, [0, 1], ['0%', '90%'])
+  
+  // Create motion values to avoid scroll-based animation
+  const staticProgress = useMotionValue(0)
+  const yHero = useTransform(staticProgress, [0, 1], ["0%", "50%"])
+  const opacityHero = useTransform(staticProgress, [0, 0.5], [1, 0])
+  const rocketTop = useTransform(staticProgress, [0, 1], ['0%', '90%'])
   
   const [isDemoOpen, setIsDemoOpen] = useState(false)
   const [isSystemBooted, setIsSystemBooted] = useState(false)
@@ -369,7 +370,7 @@ export default function LandingPage() {
   if (!mounted) return null
 
   return (
-    <div ref={targetRef} className="min-h-screen flex flex-col font-sans text-white bg-[#050505] selection:bg-[#00ff88] selection:text-black overflow-x-hidden">
+    <div ref={targetRef} suppressHydrationWarning className="min-h-screen flex flex-col font-sans text-white bg-[#050505] selection:bg-[#00ff88] selection:text-black overflow-x-hidden">
       
       {/* 1. BOOT LOADER */}
       <AnimatePresence>

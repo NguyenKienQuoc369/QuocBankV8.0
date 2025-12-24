@@ -29,6 +29,10 @@ model Account {
   accountNumber String   @unique // Số tài khoản (VD: 9999999999)
   balance       Float    @default(0)
   isLocked      Boolean  @default(false)
+  pin           String?  // Mã PIN 6 số (mã hóa)
+  dailyLimit    Float    @default(50000000) // Hạn mức thanh toán mỗi ngày (50 triệu)
+  monthlyLimit  Float    @default(500000000) // Hạn mức thanh toán mỗi tháng (500 triệu)
+  cashbackBalance Float  @default(0) // Số tiền hoàn trả tích lũy
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -39,6 +43,8 @@ model Account {
   sentTransactions     Transaction[] @relation("SentTransactions")
   receivedTransactions Transaction[] @relation("ReceivedTransactions")
   savings              SavingsAccount[]
+  piggyBanks           PiggyBank[]
+  cashbackHistory      CashbackHistory[]
 
   @@index([userId])
 }
@@ -52,6 +58,10 @@ model Card {
   cvv        String
   type       String   @default("PLATINUM")
   isLocked   Boolean  @default(false)
+  dailyLimit Float    @default(20000000) // Hạn mức rút tiền mỗi ngày (20 triệu)
+  monthlyLimit Float  @default(200000000) // Hạn mức rút tiền mỗi tháng (200 triệu)
+  nfcEnabled Boolean  @default(true) // Chạm để thanh toán
+  magneticEnabled Boolean @default(true) // Thanh toán qua dải từ
   createdAt  DateTime @default(now())
 
   account    Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
@@ -97,6 +107,93 @@ model SavingsAccount {
   maturityDate DateTime? // Ngày đáo hạn
 
   account      Account   @relation(fields: [accountId], references: [id])
+  
+  @@index([accountId])
+}
+
+// 6. Hũ tiết kiệm / Heo đất
+model PiggyBank {
+  id          String   @id @default(cuid())
+  accountId   String
+  name        String   // Tên hũ tiết kiệm (VD: "Mua xe", "Du lịch")
+  targetAmount Float   // Số tiền mục tiêu
+  currentAmount Float  @default(0)
+  icon        String   @default("pig") // Icon cho hũ
+  color       String   @default("pink")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  account     Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  
+  @@index([accountId])
+}
+
+// 7. Lịch sử hoàn tiền (Cashback)
+model CashbackHistory {
+  id              String   @id @default(cuid())
+  accountId       String
+  transactionId   String?  // ID giao dịch gốc
+  amount          Float    // Số tiền được hoàn (0.5% của giao dịch)
+  source          String   // Nguồn: BILL_PAYMENT, TRANSFER, etc.
+  status          String   @default("PENDING") // PENDING, REDEEMED
+  createdAt       DateTime @default(now())
+
+  account         Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  
+  @@index([accountId])
+}
+
+// 8. Nhà cung cấp nạp tiền điện thoại
+model MobileProvider {
+  id          String   @id @default(cuid())
+  code        String   @unique // VIETTEL, MOBIFONE, VINAPHONE
+  name        String
+  logo        String?
+  denominations String // JSON array: [10000, 20000, 50000, 100000, 200000, 500000]
+  serviceFee  Float    @default(0)
+  createdAt   DateTime @default(now())
+  
+  recharges   MobileRecharge[]
+}
+
+// 9. Lịch sử nạp tiền điện thoại
+model MobileRecharge {
+  id          String   @id @default(cuid())
+  accountId   String
+  providerId  String
+  phoneNumber String
+  amount      Float
+  status      String   @default("SUCCESS") // SUCCESS, FAILED, PENDING
+  createdAt   DateTime @default(now())
+
+  provider    MobileProvider @relation(fields: [providerId], references: [id])
+  
+  @@index([accountId])
+  @@index([providerId])
+}
+
+// 10. Địa điểm nạp tiền (Hành tinh)
+model DepositLocation {
+  id          String   @id @default(cuid())
+  planetName  String   // Tên hành tinh (Mars, Venus, Jupiter...)
+  planetCode  String   @unique // MARS, VENUS, JUPITER
+  description String?
+  color       String   // Màu chủ đạo của hành tinh
+  icon        String   // Icon hành tinh
+  depositPoints Int    @default(5) // Số điểm nạp tiền trên hành tinh
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+// 11. Lịch sử thay đổi PIN
+model PinChangeHistory {
+  id          String   @id @default(cuid())
+  accountId   String
+  changedAt   DateTime @default(now())
+  ipAddress   String?
+  
+  @@index([accountId])
 }
 // Nhà cung cấp dịch vụ (Điện, Nước, Net...)
 model BillProvider {
@@ -116,4 +213,6 @@ enum BillCategory {
   WATER
   INTERNET
   TELEVISION
+  MOBILE_RECHARGE
+  CARD_TOPUP
 }

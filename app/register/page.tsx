@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
 import { register } from '@/app/actions/auth'
+import { CosmicLogo } from '@/components/ui/CosmicLogo'
 import { 
    User, Mail, Lock, Loader2, Rocket, 
    CreditCard, ShieldCheck, CheckCircle2, 
@@ -366,12 +367,22 @@ export default function RegisterPage() {
            {/* Header */}
            <div className="mb-10">
               <Link href="/" className="inline-flex items-center gap-3 text-white/50 hover:text-white transition-colors mb-6 group/back">
-                 <div className="p-1 rounded-full border border-white/10 group-hover/back:border-[#00ff88] transition-colors">
+                 <div className="p-1 rounded-full border border-white/10 group-hover/back:border-cyan-400 transition-colors">
                     <ChevronLeft size={16} />
                  </div>
                  <span className="text-xs font-mono">QUAY LẠI TRẠM CHỈ HUY</span>
               </Link>
-              <h1 className="text-4xl font-black mb-2 tracking-tight">KÍCH HOẠT HỒ SƠ</h1>
+              
+              {/* Logo & Brand */}
+              <div className="flex items-center gap-3 mb-8">
+                 <CosmicLogo size={40} />
+                 <div>
+                    <h1 className="text-2xl font-bold tracking-[0.2em]">QUOC<span className="text-cyan-400">BANK</span></h1>
+                    <p className="text-[10px] text-gray-500 font-mono tracking-widest">RECRUITMENT TERMINAL</p>
+                 </div>
+              </div>
+              
+              <h2 className="text-3xl font-black mb-2 tracking-tight">KÍCH HOẠT HỒ SƠ</h2>
               <p className="text-gray-400 text-sm">Hoàn tất 3 bước xác thực để gia nhập hạm đội.</p>
            </div>
 
@@ -501,13 +512,14 @@ export default function RegisterPage() {
                                    <AlertTriangle size={14} /> {state.error}
                                 </div>
                              )}
-
-                             {/* Hidden inputs to submit all data */}
-                             <input type="hidden" name="fullName" value={formData.fullName} />
-                             <input type="hidden" name="username" value={formData.username} />
-                             <input type="hidden" name="password" value={formData.password} />
                           </motion.div>
                        )}
+
+                       {/* Hidden inputs - submit all form data */}
+                       <input type="hidden" name="fullName" value={formData.fullName} />
+                       <input type="hidden" name="username" value={formData.username} />
+                       <input type="hidden" name="password" value={formData.password} />
+                       <input type="hidden" name="confirmPassword" value={formData.confirmPassword} />
 
                        {/* NAVIGATION BUTTONS */}
                        <div className="mt-auto pt-8 flex gap-4">

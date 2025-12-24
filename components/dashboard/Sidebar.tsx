@@ -3,6 +3,7 @@ import { Home, CreditCard, Repeat, PieChart, Settings, LogOut, Shield } from 'lu
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { logout } from '@/actions/auth'
+import { CosmicLogo } from '@/components/ui/CosmicLogo'
 
 const menuItems = [
   { icon: Home, label: 'Trung tâm chỉ huy', href: '/dashboard' },
@@ -17,10 +18,13 @@ export function DashboardSidebar() {
   const pathname = usePathname()
 
   return (
-    <div className="flex flex-col h-full p-4">
+    <div className="flex flex-col h-full p-4 border-r border-cyan-500/10">
       <div className="flex items-center gap-3 px-4 mb-10 mt-2">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#00ff88] to-blue-600 flex items-center justify-center font-bold text-black text-xl shadow-[0_0_20px_rgba(0,255,136,0.4)]">Q</div>
-        <span className="text-xl font-bold tracking-wider text-white">QUOC<span className="text-[#00ff88]">BANK</span></span>
+        <CosmicLogo size={40} />
+        <div>
+          <span className="text-lg font-bold tracking-[0.2em] block">QUOC<span className="text-cyan-400">BANK</span></span>
+          <span className="text-[8px] text-gray-600 font-mono tracking-widest block">HUD CONTROL</span>
+        </div>
       </div>
 
       <nav className="flex-1 space-y-2">
@@ -28,10 +32,12 @@ export function DashboardSidebar() {
           const isActive = pathname === item.href
           const Icon = item.icon
           return (
-            <Link key={item.href} href={item.href} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${isActive ? 'bg-indigo-600/20 text-[#00ff88] border border-indigo-500/30' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
-              <Icon size={20} className={`transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
-              <span className="font-medium">{item.label}</span>
-              {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#00ff88] shadow-[0_0_10px_#00ff88]" />}
+            <Link key={item.href} href={item.href} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative text-left overflow-hidden
+              ${isActive ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.1)]' : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'}`}>
+              {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.8)]" />}
+              <Icon size={18} className={`transition-transform duration-300 ${isActive ? 'text-cyan-400' : 'group-hover:scale-110'}`} />
+              <span className="font-medium text-sm">{item.label}</span>
+              {isActive && <div className="ml-auto w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(6,182,212,0.8)]" />}
             </Link>
           )
         })}

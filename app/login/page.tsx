@@ -5,7 +5,9 @@ import React, { useState, useActionState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useSpring, useMotionValue, useTransform } from 'framer-motion'
-import { login } from '@/app/actions/auth'
+import { login, loginWithPin } from '@/app/actions/auth'
+import { CosmicLogo } from '@/components/ui/CosmicLogo'
+import { PinVerification } from '@/components/security/PinVerification'
 import { 
   LogIn, Key, User, Loader2, ShieldCheck, 
   Cpu, Zap, Globe, ScanFace, Lock, AlertTriangle, 
@@ -13,10 +15,13 @@ import {
 } from 'lucide-react'
 
 // --- 1. CONFIG & UTILS ---
-const initialState = {
+const initialState: any = {
   message: '',
   error: '',
-  success: false
+  success: false,
+  requiresPin: false,
+  userId: null,
+  accountId: null
 }
 
 // Hàm random số cho hiệu ứng Matrix
@@ -284,6 +289,8 @@ export default function LoginPage() {
   const [focusedField, setFocusedField] = useState<string | null>(null)
   const [isBooting, setIsBooting] = useState(true) // State khởi động
   const router = useRouter()
+  const [showPinVerification, setShowPinVerification] = useState(false)
+  const [pinData, setPinData] = useState<{ userId: string; accountId: string } | null>(null)
 
   // Parallax Effect Logic - Optimized với throttle
   const mouseX = useMotionValue(0)
@@ -305,19 +312,49 @@ export default function LoginPage() {
     return () => clearTimeout(timer)
   }, [])
 
-  // Xử lý login thành công
+  // Xử lý login thành công hoặc cần PIN
   useEffect(() => {
     if (state?.success) {
       router.refresh()
       router.push('/dashboard') 
+    } else if (state?.requiresPin && state?.userId && state?.accountId) {
+      // Nếu cần PIN verification
+      setPinData({ userId: state.userId, accountId: state.accountId })
+      setShowPinVerification(true)
     }
-  }, [state?.success, router])
+  }, [state?.success, state?.requiresPin, state?.userId, state?.accountId, router])
+
+  const handlePinVerified = async () => {
+    if (!pinData) return
+    setShowPinVerification(false)
+    const result = await loginWithPin(pinData.userId, pinData.accountId)
+    if (result.success) {
+      router.refresh()
+      router.push('/dashboard')
+    }
+  }
+
+  const handlePinCancelled = () => {
+    setShowPinVerification(false)
+    setPinData(null)
+  }
 
   return (
     <div 
       className="min-h-screen w-full bg-black text-white flex items-center justify-center relative overflow-hidden font-sans selection:bg-cyan-500 selection:text-black perspective-1000"
       onMouseMove={handleMouseMove}
     >
+      {/* PIN VERIFICATION MODAL */}
+      {showPinVerification && pinData && (
+        <PinVerification
+          accountId={pinData.accountId}
+          onVerified={handlePinVerified}
+          onCancel={handlePinCancelled}
+          title="Xác thực đăng nhập"
+          description="Nhập mã PIN 6 số để hoàn tất quá trình đăng nhập"
+        />
+      )}
+
       {/* --- BACKGROUND LAYERS --- */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/20 via-black to-black z-0" />
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-15 mix-blend-overlay z-0" />
@@ -345,7 +382,7 @@ export default function LoginPage() {
           {/* Logo & Brand */}
           <div className="relative z-10 flex-shrink-0">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-600 to-cyan-600 flex items-center justify-center font-bold text-white shadow-lg">Q</div>
+              <CosmicLogo size={40} />
               <span className="text-2xl font-bold tracking-[0.2em]">QUOC<span className="text-cyan-400">BANK</span></span>
             </div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-green-500/30 bg-green-500/10 text-green-400 text-xs font-mono">
