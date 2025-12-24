@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { formatVND } from '@/lib/utils';
-import { CreditCard, TrendingUp, Wallet, Send, Activity, Database, BarChart3, ArrowDownRight, ArrowUpRight, Eye, EyeOff, Clock, Zap, Shield, Settings } from 'lucide-react';
+import { CreditCard, TrendingUp, Wallet, Send, Activity, Database, BarChart3, ArrowDownRight, ArrowUpRight, Eye, EyeOff, Clock, Zap, Shield, Settings, QrCode } from 'lucide-react';
 import Link from 'next/link';
 import { getDashboardData } from '@/actions/dashboard';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -338,6 +338,29 @@ export default function DashboardPage() {
 
       {/* === QUICK ACTION MODULES === */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* QR PAYMENT - FEATURED */}
+        <Link href="/dashboard/qr" className={`action-card group relative overflow-hidden rounded-2xl border border-cyan-500/40 bg-gradient-to-br from-cyan-500/20 via-blue-500/10 to-purple-500/10 hover:border-cyan-400 transition-all duration-300 hover:shadow-[0_0_30px_rgba(6,182,212,0.4)] ${animateStats ? 'animate-in fade-in slide-in-from-top-4 duration-500 delay-400' : 'opacity-0'}`}>
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/30 via-blue-500/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-b from-cyan-400/20 via-transparent to-transparent" style={{ animation: 'scan 2s linear infinite' }} />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.15),transparent_70%)]" />
+          </div>
+          
+          <div className="relative p-8 flex items-center gap-6 group-hover:translate-x-1 transition-transform duration-300">
+            <div className="relative">
+              <div className="absolute inset-0 bg-cyan-400/40 rounded-lg blur-xl group-hover:blur-2xl transition-all" />
+              <div className="relative p-4 rounded-lg bg-gradient-to-br from-cyan-500/30 to-blue-500/30 border border-cyan-400/50 group-hover:bg-cyan-400/20 group-hover:shadow-[0_0_25px_rgba(6,182,212,0.5)] transition-all group-hover:scale-110 group-hover:rotate-3">
+                <QrCode className="w-8 h-8 text-cyan-200 group-hover:text-white" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <h4 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-300 to-cyan-200 group-hover:from-cyan-200 group-hover:via-blue-200 group-hover:to-white transition-all">QR PAYMENT</h4>
+              <p className="text-xs text-cyan-300/80 font-mono group-hover:text-cyan-200 transition-colors">Scan & Generate instantly</p>
+            </div>
+            <div className="text-3xl text-cyan-400/40 group-hover:text-cyan-300 transition-all group-hover:translate-x-2 group-hover:scale-125">→</div>
+          </div>
+        </Link>
+
         <Link href="/dashboard/transfer" className={`action-card group relative overflow-hidden rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-black/40 via-black/30 to-cyan-500/5 hover:border-cyan-500/50 transition-all duration-300 ${animateStats ? 'animate-in fade-in slide-in-from-left-4 duration-500 delay-500' : 'opacity-0'}`}>
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-transparent to-transparent" />
