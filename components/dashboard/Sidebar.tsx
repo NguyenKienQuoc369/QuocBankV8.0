@@ -1,5 +1,5 @@
 'use client'
-import { Home, CreditCard, Repeat, PieChart, Settings, LogOut, Shield, QrCode } from 'lucide-react'
+import { Home, CreditCard, Repeat, PieChart, Settings, LogOut, Shield, QrCode, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { logout } from '@/actions/auth'
@@ -10,6 +10,7 @@ const menuItems = [
   { icon: QrCode, label: 'Quét mã QR', href: '/dashboard/qr' },
   { icon: CreditCard, label: 'Quản lý thẻ', href: '/dashboard/cards' },
   { icon: Repeat, label: 'Chuyển khoản', href: '/dashboard/transfer' },
+  { icon: TrendingUp, label: 'Tiết kiệm', href: '/dashboard/savings' },
   { icon: PieChart, label: 'Báo cáo tài chính', href: '/dashboard/reports' },
   { icon: Shield, label: 'Bảo mật', href: '/dashboard/security' },
   { icon: Settings, label: 'Cấu hình hệ thống', href: '/dashboard/settings' },

@@ -361,6 +361,28 @@ export default function DashboardPage() {
           </div>
         </Link>
 
+        {/* TOP UP - QUICK LOAD */}
+        <Link href="/dashboard/topup" className={`action-card group relative overflow-hidden rounded-2xl border border-green-500/30 bg-gradient-to-br from-green-500/15 via-emerald-500/10 to-green-500/5 hover:border-green-400 transition-all duration-300 hover:shadow-[0_0_30px_rgba(16,185,129,0.3)] ${animateStats ? 'animate-in fade-in slide-in-from-top-4 duration-500 delay-450' : 'opacity-0'}`}>
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-400/20 via-emerald-500/10 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-b from-green-400/10 via-transparent to-transparent" style={{ animation: 'scan 2s linear infinite' }} />
+          </div>
+          
+          <div className="relative p-8 flex items-center gap-6 group-hover:translate-x-1 transition-transform duration-300">
+            <div className="relative">
+              <div className="absolute inset-0 bg-green-400/30 rounded-lg blur-xl group-hover:blur-2xl transition-all" />
+              <div className="relative p-4 rounded-lg bg-gradient-to-br from-green-500/30 to-emerald-500/30 border border-green-400/50 group-hover:bg-green-400/20 group-hover:shadow-[0_0_25px_rgba(16,185,129,0.4)] transition-all group-hover:scale-110 group-hover:rotate-3">
+                <Wallet className="w-8 h-8 text-green-200 group-hover:text-white" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <h4 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-300 via-emerald-300 to-green-200 group-hover:from-green-200 group-hover:via-emerald-200 group-hover:to-white transition-all">TOP UP</h4>
+              <p className="text-xs text-green-300/80 font-mono group-hover:text-green-200 transition-colors">Load balance instantly</p>
+            </div>
+            <div className="text-3xl text-green-400/40 group-hover:text-green-300 transition-all group-hover:translate-x-2 group-hover:scale-125">→</div>
+          </div>
+        </Link>
+
         <Link href="/dashboard/transfer" className={`action-card group relative overflow-hidden rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-black/40 via-black/30 to-cyan-500/5 hover:border-cyan-500/50 transition-all duration-300 ${animateStats ? 'animate-in fade-in slide-in-from-left-4 duration-500 delay-500' : 'opacity-0'}`}>
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-transparent to-transparent" />

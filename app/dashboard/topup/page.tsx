@@ -1,7 +1,7 @@
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
-import { DepositLocations } from '@/components/topup/DepositLocations';
+import { QuickTopupClient } from './QuickTopupClient';
 
 export default async function TopUpPage() {
   const payload = await getSession();
@@ -18,8 +18,10 @@ export default async function TopUpPage() {
   if (!account) redirect('/dashboard');
 
   return (
-    <div className="container mx-auto max-w-6xl">
-      <DepositLocations accountId={account.id} balance={account.balance} />
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 py-6 md:py-10 px-4">
+      <div className="max-w-2xl mx-auto">
+        <QuickTopupClient accountId={account.id} currentBalance={account.balance} />
+      </div>
     </div>
   );
 }

@@ -103,3 +103,293 @@ export async function createSavings(prevState: any, formData: FormData) {
     return { success: false, message: error instanceof Error ? error.message : 'Lỗi hệ thống' }
   }
 }
+
+// 3. Rút sổ tiết kiệm (trước hạn hoặc đáo hạn)
+export async function withdrawSavings(savingsId: string) {
+  try {
+    const token = (await cookies()).get('session_token')?.value
+    if (!token) return { success: false, message: 'Mất kết nối' }
+    const payload = await verifyToken(token)
+    if (!payload?.id) return { success: false, message: 'Không xác thực được' }
+
+    const savings = await prisma.savingsAccount.findUnique({
+      where: { id: savingsId },
+      include: { account: true }
+    })
+
+    if (!savings) {
+      return { success: false, message: 'Sổ tiết kiệm không tồn tại' }
+    }
+
+    if (savings.account.userId !== payload.id) {
+      return { success: false, message: 'Không có quyền rút sổ này' }
+    }
+
+    if (!savings.isActive) {
+      return { success: false, message: 'Sổ tiết kiệm đã được rút rồi' }
+    }
+
+    // Tính tiền lãi
+    const now = new Date()
+    const isMatured = savings.maturityDate && now >= savings.maturityDate
+    
+    let interestAmount = 0
+    if (isMatured) {
+      // Lãi đầy đủ
+      interestAmount = (savings.amount * savings.interestRate) / 100
+    } else {
+      // Rút trước hạn: tính lãi từng tháng (giảm 50%)
+      const monthsElapsed = savings.maturityDate
+        ? Math.floor(
+            (now.getTime() - savings.createdAt.getTime()) /
+              (1000 * 60 * 60 * 24 * 30)
+          )
+        : 0
+      interestAmount = ((savings.amount * savings.interestRate * monthsElapsed) / (12 * 100)) * 0.5
+    }
+
+    const totalAmount = savings.amount + interestAmount
+
+    await prisma.$transaction(async (tx) => {
+      // Thêm tiền vào tài khoản chính
+      await tx.account.update({
+        where: { id: savings.accountId },
+        data: {
+          balance: { increment: totalAmount }
+        }
+      })
+
+      // Đánh dấu sổ tiết kiệm đã rút
+      await tx.savingsAccount.update({
+        where: { id: savingsId },
+        data: { isActive: false }
+      })
+
+      // Tạo giao dịch
+      await tx.transaction.create({
+        data: {
+          amount: totalAmount,
+          description: `Rút sổ tiết kiệm (Gốc: ${savings.amount.toLocaleString('vi-VN')} đ, Lãi: ${Math.round(interestAmount).toLocaleString('vi-VN')} đ${
+            isMatured ? ', Đáo hạn' : ', Rút trước hạn'
+          })`,
+          status: 'SUCCESS',
+          type: 'WITHDRAW',
+          toAccountId: savings.accountId
+        }
+      })
+    })
+
+    revalidatePath('/dashboard/savings')
+    return {
+      success: true,
+      message: `Rút sổ tiết kiệm thành công! Nhận ${totalAmount.toLocaleString('vi-VN')} đ`
+    }
+  } catch (error: unknown) {
+    return { success: false, message: error instanceof Error ? error.message : 'Lỗi hệ thống' }
+  }
+}
+
+// 4. Mở tài khoản ống heo
+export async function createPiggyBank(name: string, targetAmount: number, icon: string = 'pig', color: string = 'pink') {
+  try {
+    const token = (await cookies()).get('session_token')?.value
+    if (!token) return { success: false, message: 'Mất kết nối' }
+    const payload = await verifyToken(token)
+    if (!payload?.id) return { success: false, message: 'Không xác thực được' }
+
+    if (!name || name.trim().length === 0) {
+      return { success: false, message: 'Vui lòng nhập tên hũ' }
+    }
+
+    if (targetAmount <= 0) {
+      return { success: false, message: 'Mục tiêu tiết kiệm phải lớn hơn 0' }
+    }
+
+    // Get first account for this user
+    const account = await prisma.account.findFirst({
+      where: { userId: payload.id as string }
+    })
+
+    if (!account) {
+      return { success: false, message: 'Tài khoản không tồn tại' }
+    }
+
+    const piggy = await prisma.piggyBank.create({
+      data: {
+        accountId: account.id,
+        name: name.trim(),
+        targetAmount,
+        icon,
+        color
+      }
+    })
+
+    revalidatePath('/dashboard/savings')
+    return {
+      success: true,
+      message: `Mở ống heo "${name}" thành công!`
+    }
+  } catch (error: unknown) {
+    return { success: false, message: error instanceof Error ? error.message : 'Lỗi hệ thống' }
+  }
+}
+
+// 5. Lấy danh sách ống heo
+export async function getPiggyBanks() {
+  try {
+    const token = (await cookies()).get('session_token')?.value
+    if (!token) return []
+    const payload = await verifyToken(token)
+    if (!payload?.id) return []
+
+    const userAccounts = await prisma.account.findMany({
+      where: { userId: payload.id as string },
+      include: {
+        piggyBanks: {
+          where: { isActive: true },
+          orderBy: { createdAt: 'desc' }
+        }
+      }
+    })
+
+    return userAccounts.flatMap(account => account.piggyBanks)
+  } catch {
+    return []
+  }
+}
+
+// 6. Thêm tiền vào ống heo
+export async function addToPiggyBank(piggyBankId: string, amount: number) {
+  try {
+    const token = (await cookies()).get('session_token')?.value
+    if (!token) return { success: false, message: 'Mất kết nối' }
+    const payload = await verifyToken(token)
+    if (!payload?.id) return { success: false, message: 'Không xác thực được' }
+
+    if (amount <= 0) {
+      return { success: false, message: 'Số tiền không hợp lệ' }
+    }
+
+    const piggy = await prisma.piggyBank.findUnique({
+      where: { id: piggyBankId },
+      include: { account: true }
+    })
+
+    if (!piggy) {
+      return { success: false, message: 'Hũ tiết kiệm không tồn tại' }
+    }
+
+    if (piggy.account.userId !== payload.id) {
+      return { success: false, message: 'Không có quyền thao tác hũ này' }
+    }
+
+    if (piggy.account.balance < amount) {
+      return { success: false, message: 'Số dư không đủ' }
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // Cập nhật hũ tiết kiệm
+      await tx.piggyBank.update({
+        where: { id: piggyBankId },
+        data: {
+          currentAmount: { increment: amount }
+        }
+      })
+
+      // Trừ tiền từ tài khoản chính
+      await tx.account.update({
+        where: { id: piggy.accountId },
+        data: {
+          balance: { decrement: amount }
+        }
+      })
+
+      // Tạo giao dịch
+      await tx.transaction.create({
+        data: {
+          amount,
+          description: `Tiết kiệm vào hũ "${piggy.name}"`,
+          status: 'SUCCESS',
+          type: 'TRANSFER',
+          fromAccountId: piggy.accountId
+        }
+      })
+    })
+
+    revalidatePath('/dashboard/savings')
+    return {
+      success: true,
+      message: `Thêm ${amount.toLocaleString('vi-VN')} đ vào hũ "${piggy.name}"!`
+    }
+  } catch (error: unknown) {
+    return { success: false, message: error instanceof Error ? error.message : 'Lỗi hệ thống' }
+  }
+}
+
+// 7. Rút tiền từ ống heo
+export async function withdrawFromPiggyBank(piggyBankId: string, amount?: number) {
+  try {
+    const token = (await cookies()).get('session_token')?.value
+    if (!token) return { success: false, message: 'Mất kết nối' }
+    const payload = await verifyToken(token)
+    if (!payload?.id) return { success: false, message: 'Không xác thực được' }
+
+    const piggy = await prisma.piggyBank.findUnique({
+      where: { id: piggyBankId },
+      include: { account: true }
+    })
+
+    if (!piggy) {
+      return { success: false, message: 'Hũ tiết kiệm không tồn tại' }
+    }
+
+    if (piggy.account.userId !== payload.id) {
+      return { success: false, message: 'Không có quyền thao tác hũ này' }
+    }
+
+    // Rút toàn bộ nếu không chỉ định số tiền
+    const withdrawAmount = amount || piggy.currentAmount
+
+    if (withdrawAmount <= 0 || withdrawAmount > piggy.currentAmount) {
+      return { success: false, message: 'Số tiền rút không hợp lệ' }
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // Cập nhật hũ tiết kiệm
+      await tx.piggyBank.update({
+        where: { id: piggyBankId },
+        data: {
+          currentAmount: { decrement: withdrawAmount },
+          isActive: piggy.currentAmount - withdrawAmount > 0
+        }
+      })
+
+      // Thêm tiền vào tài khoản chính
+      await tx.account.update({
+        where: { id: piggy.accountId },
+        data: {
+          balance: { increment: withdrawAmount }
+        }
+      })
+
+      // Tạo giao dịch
+      await tx.transaction.create({
+        data: {
+          amount: withdrawAmount,
+          description: `Rút từ hũ "${piggy.name}"`,
+          status: 'SUCCESS',
+          type: 'WITHDRAW',
+          toAccountId: piggy.accountId
+        }
+      })
+    })
+
+    revalidatePath('/dashboard/savings')
+    return {
+      success: true,
+      message: `Rút ${withdrawAmount.toLocaleString('vi-VN')} đ từ hũ "${piggy.name}"!`
+    }
+  } catch (error: unknown) {
+    return { success: false, message: error instanceof Error ? error.message : 'Lỗi hệ thống' }
+  }
+}
