@@ -78,7 +78,7 @@ export function Planet({
         )}
       </Sphere>
 
-      {/* --- HIỆU ỨNG MẶT TRỜI (Đã sửa lại gọn gàng) --- */}
+      {/* --- HIỆU ỨNG MẶT TRỜI --- */}
       {isSun && (
         <Sphere args={[size * 1.1, 32, 32]}> {/* Chỉ to hơn 10% */}
             <meshBasicMaterial

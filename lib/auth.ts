@@ -1,12 +1,19 @@
-// lib/auth.ts
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 
-// Lấy secret key từ biến môi trường
-const secretKey = process.env.JWT_SECRET || 'quocbank-secret-key'
-const key = new TextEncoder().encode(secretKey)
+function getJwtKey() {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('JWT_SECRET is required in production')
+    }
+    // Dev-only fallback (do NOT use in production)
+    return new TextEncoder().encode('dev-only-insecure-secret')
+  }
+  return new TextEncoder().encode(secret)
+}
 
 // 1. Mã hóa mật khẩu
 export async function hashPassword(password: string) {
@@ -20,6 +27,7 @@ export async function verifyPassword(password: string, hash: string) {
 
 // 3. Tạo Token/Session
 export async function createToken(payload: any) {
+  const key = getJwtKey()
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -33,6 +41,7 @@ export const encrypt = createToken
 // 4. Giải mã Token
 export async function verifyToken(token: string) {
   try {
+    const key = getJwtKey()
     const { payload } = await jwtVerify(token, key, { algorithms: ['HS256'] })
     return payload
   } catch (error) {

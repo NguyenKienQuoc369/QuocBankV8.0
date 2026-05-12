@@ -20,6 +20,9 @@ model User {
 
   // Quan hệ: Một người có thể có 1 tài khoản ngân hàng chính
   accounts      Account[]
+
+  // Audit/security events
+  securityLogs  SecurityLog[]
 }
 
 // 2. Tài khoản Ngân hàng (Chứa tiền)
@@ -215,4 +218,47 @@ enum BillCategory {
   TELEVISION
   MOBILE_RECHARGE
   CARD_TOPUP
+}
+
+// --- Security Monitoring ---
+enum SecuritySeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model SecurityLog {
+  id            String           @id @default(cuid())
+  createdAt     DateTime         @default(now())
+
+  // Actor
+  userId        String?
+  user          User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // What happened
+  action        String
+  severity      SecuritySeverity @default(LOW)
+  status        String?          // SUCCESS | FAIL | BLOCK | INFO
+
+  // Request context
+  ipAddress     String?
+  location      String?
+  userAgent     String?
+  fingerprint   String?
+  requestPath   String?
+  requestMethod String?
+  requestId     String?
+
+  // Target context (optional)
+  targetModel   String?
+  targetId      String?
+
+  // Free-form metadata for investigations
+  metadata      Json?
+
+  @@index([createdAt])
+  @@index([severity, createdAt])
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
 }

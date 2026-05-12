@@ -5,6 +5,10 @@ import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { verifyToken } from '@/lib/auth'
+import { getRequestMeta } from '@/lib/security/request'
+import { runWithSecurityContext } from '@/lib/security/context'
+import { writeSecurityLog } from '@/lib/security/log'
+import { sendSecurityAlertEmail } from '@/lib/security/alerts'
 
 const TransferSchema = z.object({
   amount: z.coerce.number().min(10000, 'Số tiền tối thiểu 10.000đ'),
@@ -41,36 +45,70 @@ export async function transferMoney(prevStateOrFormData?: FormData | unknown, fo
     const fee = Number((amount * FEE_RATE).toFixed(0)) // làm tròn về số nguyên VND
     const totalDebit = amount + fee
 
-    await prisma.$transaction(async (tx) => {
-      const senderAccount = await tx.account.findFirst({ where: { userId: senderId }, orderBy: { createdAt: 'asc' } })
+    const meta = await getRequestMeta()
+    await runWithSecurityContext(
+      {
+        userId: senderId,
+        ipAddress: meta.ipAddress,
+        userAgent: meta.userAgent,
+        fingerprint: meta.fingerprint,
+        requestId: meta.requestId,
+        requestPath: meta.requestPath,
+        requestMethod: meta.requestMethod,
+      },
+      async () => {
+        await prisma.$transaction(async (tx) => {
+          const senderAccount = await tx.account.findFirst({ where: { userId: senderId }, orderBy: { createdAt: 'asc' } })
 
-      if (!senderAccount) throw new Error('Không tìm thấy tài khoản nguồn')
-      if (senderAccount.isLocked) throw new Error('Tài khoản nguồn đang bị khóa')
-      if (senderAccount.balance < totalDebit) throw new Error('Số dư không đủ (đã bao gồm phí)')
+          if (!senderAccount) throw new Error('Không tìm thấy tài khoản nguồn')
+          if (senderAccount.isLocked) throw new Error('Tài khoản nguồn đang bị khóa')
+          if (senderAccount.dailyLimit != null && amount > senderAccount.dailyLimit) throw new Error('Vượt hạn mức giao dịch ngày')
+          if (senderAccount.balance < totalDebit) throw new Error('Số dư không đủ (đã bao gồm phí)')
 
-      const receiverUser = await tx.user.findUnique({ where: { username: toUsername } })
-      if (!receiverUser) throw new Error('Không tìm thấy tọa độ người nhận (Username sai)')
-      if (receiverUser.id === senderId) throw new Error('Không thể tự chuyển năng lượng cho chính mình')
+          const receiverUser = await tx.user.findUnique({ where: { username: toUsername } })
+          if (!receiverUser) throw new Error('Không tìm thấy tọa độ người nhận (Username sai)')
+          if (receiverUser.id === senderId) throw new Error('Không thể tự chuyển năng lượng cho chính mình')
 
-      const receiverAccount = await tx.account.findFirst({ where: { userId: receiverUser.id }, orderBy: { createdAt: 'asc' } })
-      if (!receiverAccount) throw new Error('Người nhận chưa có tài khoản')
-      if (receiverAccount.isLocked) throw new Error('Tài khoản người nhận đang bị khóa')
+          const receiverAccount = await tx.account.findFirst({ where: { userId: receiverUser.id }, orderBy: { createdAt: 'asc' } })
+          if (!receiverAccount) throw new Error('Người nhận chưa có tài khoản')
+          if (receiverAccount.isLocked) throw new Error('Tài khoản người nhận đang bị khóa')
 
-      // Trừ người gửi gồm amount + fee, cộng người nhận amount
-      await tx.account.update({ where: { id: senderAccount.id }, data: { balance: { decrement: totalDebit } } })
-      await tx.account.update({ where: { id: receiverAccount.id }, data: { balance: { increment: amount } } })
+          await tx.account.update({ where: { id: senderAccount.id }, data: { balance: { decrement: totalDebit } } })
+          await tx.account.update({ where: { id: receiverAccount.id }, data: { balance: { increment: amount } } })
 
-      await tx.transaction.create({
-        data: {
-          amount,
-          description: (message || 'Chuyển khoản liên ngân hà') + ` | Phí đã trừ: ${fee.toLocaleString()} VND`,
-          status: 'SUCCESS',
-          type: 'TRANSFER',
-          fromAccountId: senderAccount.id,
-          toAccountId: receiverAccount.id,
-        }
-      })
-    })
+          await tx.transaction.create({
+            data: {
+              amount,
+              description: (message || 'Chuyển khoản liên ngân hà') + ` | Phí đã trừ: ${fee.toLocaleString('vi-VN')} VND`,
+              status: 'SUCCESS',
+              type: 'TRANSFER',
+              fromAccountId: senderAccount.id,
+              toAccountId: receiverAccount.id,
+            }
+          })
+        })
+      }
+    )
+
+    const threshold = Number(process.env.TRANSFER_ALERT_THRESHOLD ?? '100000000')
+    if (Number.isFinite(threshold) && amount >= threshold) {
+      await writeSecurityLog({
+        action: 'transactions.transfer.large',
+        severity: 'CRITICAL',
+        status: 'INFO',
+        userId: senderId,
+        ipAddress: meta.ipAddress,
+        userAgent: meta.userAgent,
+        fingerprint: meta.fingerprint,
+        requestId: meta.requestId,
+        metadata: { amount, fee, toUsername },
+      }).catch(() => {})
+
+      await sendSecurityAlertEmail({
+        subject: '[QuocBank] Large transfer detected',
+        html: `<p>Large transfer</p><pre>${JSON.stringify({ userId: senderId, ipAddress: meta.ipAddress, amount, fee, toUsername }, null, 2)}</pre>`,
+      }).catch(() => {})
+    }
 
     revalidatePath('/dashboard')
     return { success: true, message: `Giao dịch thành công! Đã chuyển ${amount.toLocaleString()} VND (Phí ${fee.toLocaleString()} VND).` }

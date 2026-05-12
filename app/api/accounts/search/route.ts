@@ -1,33 +1,59 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getSession } from '@/lib/auth'
+import { withApiGuard } from '@/lib/api/guard'
+import { sanitizeText, looksLikeScriptPayload } from '@/lib/security/sanitize'
 
 export async function GET(req: Request) {
-  const session = await getSession()
-  if (!session?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const q = new URL(req.url).searchParams.get('q') || ''
+  return withApiGuard(
+    req,
+    {
+      requireAuth: true,
+      actionName: 'accounts.search',
+      rateLimit: { keyPrefix: 'api:accounts:search', limit: 60, windowMs: 60_000 },
+    },
+    async ({ userId, ipAddress, userAgent, fingerprint, requestId }) => {
+      const rawQ = new URL(req.url).searchParams.get('q') || ''
+      const q = sanitizeText(rawQ, 64)
+      if (!q || q.length < 2) {
+        return NextResponse.json({ success: true, results: [] })
+      }
 
-  try {
-    const accounts = await prisma.account.findMany({
-      where: {
-        OR: [
-          { accountNumber: { contains: q } },
-          { user: { fullName: { contains: q } } },
-        ],
-      },
-      select: {
-        id: true,
-        accountNumber: true,
-        balance: true,
-        user: { select: { fullName: true } },
-      },
-      take: 20,
-    })
+      if (looksLikeScriptPayload(q)) {
+        // Best-effort: do not block, just return empty to avoid enumeration and log event.
+        const { writeSecurityLog } = await import('@/lib/security/log')
+        await writeSecurityLog({
+          action: 'accounts.search.suspicious',
+          severity: 'HIGH',
+          status: 'INFO',
+          userId: userId ? String(userId) : undefined,
+          ipAddress,
+          userAgent,
+          fingerprint,
+          requestId,
+          requestPath: new URL(req.url).pathname,
+          requestMethod: 'GET',
+          metadata: { q },
+        }).catch(() => {})
+        return NextResponse.json({ success: true, results: [] })
+      }
 
-    const results = accounts.map((a) => ({ id: a.id, accountNumber: a.accountNumber, balance: a.balance, ownerName: a.user.fullName }))
-    return NextResponse.json({ success: true, results })
-  } catch (error: any) {
-    console.error('API accounts search error:', error)
-    return NextResponse.json({ error: error?.message || 'Server error' }, { status: 500 })
-  }
+      const accounts = await prisma.account.findMany({
+        where: {
+          OR: [
+            { accountNumber: { contains: q, mode: 'insensitive' } as any },
+            { user: { fullName: { contains: q, mode: 'insensitive' } as any } },
+          ],
+        },
+        select: {
+          id: true,
+          accountNumber: true,
+          user: { select: { fullName: true } },
+        },
+        take: 20,
+      })
+
+      const results = accounts.map((a) => ({ id: a.id, accountNumber: a.accountNumber, ownerName: a.user.fullName }))
+      return NextResponse.json({ success: true, results })
+    }
+  )
 }

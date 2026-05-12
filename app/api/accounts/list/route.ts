@@ -1,20 +1,23 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getSession } from '@/lib/auth'
+import { withApiGuard } from '@/lib/api/guard'
 
-export async function GET() {
-  const session = await getSession()
-  if (!session?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const userId = (session as any).id as string
+export async function GET(req: Request) {
+  return withApiGuard(
+    req,
+    {
+      requireAuth: true,
+      actionName: 'accounts.list',
+      rateLimit: { keyPrefix: 'api:accounts:list', limit: 60, windowMs: 60_000 },
+    },
+    async ({ userId }) => {
+      const accounts = await prisma.account.findMany({
+        where: { userId: String(userId) },
+        select: { id: true, accountNumber: true, balance: true },
+        orderBy: { createdAt: 'desc' },
+      })
 
-  try {
-    const accounts = await prisma.account.findMany({
-      where: { userId },
-      select: { id: true, accountNumber: true, balance: true }
-    })
-    return NextResponse.json({ success: true, accounts })
-  } catch (error: any) {
-    console.error('API accounts list error:', error)
-    return NextResponse.json({ error: error?.message || 'Server error' }, { status: 500 })
-  }
+      return NextResponse.json({ success: true, accounts })
+    }
+  )
 }
