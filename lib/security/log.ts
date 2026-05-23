@@ -1,8 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import { runWithAutoLogDisabled, type SecurityContext } from './context'
-import { Prisma } from '@prisma/client'
+import { Prisma, type SecuritySeverity as PrismaSecuritySeverity } from '@prisma/client'
 
-export type SecuritySeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+export type SecuritySeverity = PrismaSecuritySeverity
 
 export type SecurityLogInput = {
   userId?: string
@@ -40,7 +40,7 @@ export async function writeSecurityLog(event: SecurityLogInput, ctx?: SecurityCo
       data: {
         userId: merged.userId,
         action: merged.action,
-        severity: merged.severity ?? 'LOW',
+        severity: (merged.severity ?? 'LOW') as any,
         status: merged.status,
         ipAddress: merged.ipAddress,
         location: merged.location,

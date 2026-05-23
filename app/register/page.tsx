@@ -7,12 +7,13 @@ export const dynamic = 'force-dynamic'
  * Security Level: Maximum
  */
 
-import React, { useState, useActionState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
-import { register } from '@/app/actions/auth'
 import { CosmicLogo } from '@/components/ui/CosmicLogo'
+import PhoneInput from 'react-phone-number-input'
+import 'react-phone-number-input/style.css'
 import { 
    User, Mail, Lock, Loader2, Rocket, 
    CreditCard, ShieldCheck, CheckCircle2, 
@@ -21,17 +22,13 @@ import {
 } from 'lucide-react'
 
 // --- 1. CONFIG & TYPES ---
-const initialState = {
-  message: '',
-  error: '',
-  success: false
-}
 
 // Các bước đăng ký
 const STEPS = [
   { id: 1, title: 'IDENTITY', desc: 'Xác lập danh tính chỉ huy' },
   { id: 2, title: 'SECURITY', desc: 'Thiết lập mã khóa lượng tử' },
-  { id: 3, title: 'PROTOCOL', desc: 'Xác nhận điều khoản liên minh' }
+   { id: 3, title: 'PROTOCOL', desc: 'Xác nhận điều khoản liên minh' },
+   { id: 4, title: 'OTP', desc: 'Xác thực email bảo mật' }
 ]
 
 // --- 2. SUB-COMPONENTS (Thành phần giao diện chi tiết) ---
@@ -280,8 +277,11 @@ const CyberCheckbox = ({ checked, onChange }: { checked: boolean, onChange: (v: 
 // --- 3. MAIN COMPONENT ---
 
 export default function RegisterPage() {
-  const [state, formAction, isPending] = useActionState(register, initialState)
   const router = useRouter()
+   const [isPending, setIsPending] = useState(false)
+   const [isSuccess, setIsSuccess] = useState(false)
+   const [otpCode, setOtpCode] = useState('')
+   const [formError, setFormError] = useState('')
   
   // State quản lý Steps
   const [currentStep, setCurrentStep] = useState(1)
@@ -292,6 +292,8 @@ export default function RegisterPage() {
      username: '', 
      password: '', 
      confirmPassword: '',
+     email: '',
+     phone: '',
      agreed: false
   })
   
@@ -299,14 +301,14 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // Xử lý chuyển hướng khi thành công
-  useEffect(() => {
-    if (state?.success) {
-      const t = setTimeout(() => {
-        router.push('/login?success=true')
-      }, 3000)
-      return () => clearTimeout(t)
-    }
-  }, [state?.success, router])
+   useEffect(() => {
+      if (isSuccess) {
+         const t = setTimeout(() => {
+            router.push('/dashboard')
+         }, 1200)
+         return () => clearTimeout(t)
+      }
+   }, [isSuccess, router])
 
   // Parallax Effect
   const mouseX = useMotionValue(0)
@@ -327,6 +329,8 @@ export default function RegisterPage() {
      if (currentStep === 1) {
         if (!formData.fullName) newErrors.fullName = "Không được để trống"
         if (!formData.username) newErrors.username = "Thiếu mã định danh"
+        if (!formData.email) newErrors.email = "Thiếu email"
+        if (!formData.phone) newErrors.phone = "Thiếu số điện thoại"
      } else if (currentStep === 2) {
         if (formData.password.length < 6) newErrors.password = "Tối thiểu 6 ký tự"
         if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Mật mã không khớp"
@@ -342,6 +346,59 @@ export default function RegisterPage() {
   }
 
   const handlePrevStep = () => setCurrentStep(prev => prev - 1)
+
+   const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault()
+      setFormError('')
+      setIsPending(true)
+
+      try {
+         const res = await fetch('/api/auth/otp/start', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+               username: formData.username,
+               password: formData.password,
+               email: formData.email,
+               phone: formData.phone,
+               fullName: formData.fullName,
+            }),
+         })
+         const data = await res.json().catch(() => ({}))
+         if (!res.ok || !data?.ok) {
+            setFormError(data?.error || 'Không thể gửi OTP')
+         } else {
+            setCurrentStep(4)
+         }
+      } finally {
+         setIsPending(false)
+      }
+   }
+
+   const handleVerifyOtp = async (e: React.FormEvent) => {
+      e.preventDefault()
+      setFormError('')
+      setIsPending(true)
+
+      try {
+         const res = await fetch('/api/auth/otp/verify', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+               username: formData.username,
+               otpCode,
+            }),
+         })
+         const data = await res.json().catch(() => ({}))
+         if (!res.ok || !data?.ok) {
+            setFormError(data?.error || 'OTP không hợp lệ')
+         } else {
+            setIsSuccess(true)
+         }
+      } finally {
+         setIsPending(false)
+      }
+   }
 
   return (
     <div 
@@ -383,7 +440,7 @@ export default function RegisterPage() {
               </div>
               
               <h2 className="text-3xl font-black mb-2 tracking-tight">KÍCH HOẠT HỒ SƠ</h2>
-              <p className="text-gray-400 text-sm">Hoàn tất 3 bước xác thực để gia nhập hạm đội.</p>
+              <p className="text-gray-400 text-sm">Hoàn tất 4 bước xác thực để gia nhập hạm đội.</p>
            </div>
 
            {/* Step Indicator */}
@@ -401,7 +458,7 @@ export default function RegisterPage() {
            {/* Form Container */}
            <div className="flex-1 relative">
               <AnimatePresence mode='wait'>
-                 {state?.success ? (
+                 {isSuccess ? (
                     // SUCCESS STATE
                     <motion.div 
                        key="success"
@@ -425,7 +482,7 @@ export default function RegisterPage() {
                     </motion.div>
                  ) : (
                     // FORM STEPS
-                    <form action={formAction} className="h-full flex flex-col">
+                    <form onSubmit={currentStep === 4 ? handleVerifyOtp : handleSubmit} className="h-full flex flex-col">
                        {/* STEP 1: IDENTITY */}
                        {currentStep === 1 && (
                           <motion.div 
@@ -451,6 +508,26 @@ export default function RegisterPage() {
                                 onBlur={() => setFocusedField(null)}
                                 error={errors.username}
                              />
+                             <CyberInput 
+                                icon={Mail} label="EMAIL" name="email" placeholder="you@example.com"
+                                value={formData.email}
+                                onChange={(e: any) => setFormData({...formData, email: e.target.value})}
+                                isFocused={focusedField === 'email'}
+                                onFocus={() => setFocusedField('email')}
+                                onBlur={() => setFocusedField(null)}
+                                error={errors.email}
+                             />
+                             <div className="space-y-1">
+                                <div className="text-[10px] font-bold uppercase tracking-widest text-gray-500 px-1">SỐ ĐIỆN THOẠI</div>
+                                <PhoneInput
+                                   international
+                                   defaultCountry="VN"
+                                   value={formData.phone}
+                                   onChange={(value) => setFormData({ ...formData, phone: value || '' })}
+                                   className="w-full rounded-xl border-2 border-white/10 bg-black/40 px-4 py-3 text-white focus:border-[#00ff88]/50"
+                                />
+                                {errors.phone && <span className="text-[9px] text-red-500 font-bold animate-pulse">{errors.phone}</span>}
+                             </div>
                           </motion.div>
                        )}
 
@@ -507,23 +584,43 @@ export default function RegisterPage() {
                                 onChange={(val) => setFormData({...formData, agreed: val})} 
                              />
                              
-                             {state?.error && (
+                             {formError && (
                                 <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-lg flex items-center gap-2">
-                                   <AlertTriangle size={14} /> {state.error}
+                                   <AlertTriangle size={14} /> {formError}
+                                </div>
+                             )}
+                          </motion.div>
+                       )}
+
+                       {currentStep === 4 && (
+                          <motion.div
+                             key="step4"
+                             initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
+                             className="space-y-6"
+                          >
+                             <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-4 text-xs text-cyan-100">
+                                Nhằm tối ưu hóa chi phí vận hành trong giai đoạn nghiệm thu, hệ thống tạm thời không gửi OTP qua tin nhắn SMS. Mã xác thực đã được chuyển hướng an toàn về Email đăng ký của quý khách.
+                             </div>
+                             <CyberInput
+                                icon={Fingerprint} label="MÃ OTP (6 SỐ)" name="otp" placeholder="******"
+                                value={otpCode}
+                                onChange={(e: any) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                isFocused={focusedField === 'otp'}
+                                onFocus={() => setFocusedField('otp')}
+                                onBlur={() => setFocusedField(null)}
+                             />
+                             {formError && (
+                                <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-lg flex items-center gap-2">
+                                   <AlertTriangle size={14} /> {formError}
                                 </div>
                              )}
                           </motion.div>
                        )}
 
                        {/* Hidden inputs - submit all form data */}
-                       <input type="hidden" name="fullName" value={formData.fullName} />
-                       <input type="hidden" name="username" value={formData.username} />
-                       <input type="hidden" name="password" value={formData.password} />
-                       <input type="hidden" name="confirmPassword" value={formData.confirmPassword} />
-
                        {/* NAVIGATION BUTTONS */}
                        <div className="mt-auto pt-8 flex gap-4">
-                          {currentStep > 1 && (
+                          {currentStep > 1 && currentStep < 4 && (
                              <button 
                                 type="button" onClick={handlePrevStep}
                                 className="px-6 py-4 rounded-xl border border-white/10 hover:bg-white/5 text-gray-400 font-bold transition-all"
@@ -539,7 +636,7 @@ export default function RegisterPage() {
                              >
                                 TIẾP TỤC <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform"/>
                              </button>
-                          ) : (
+                          ) : currentStep === 3 ? (
                              <button 
                                 type="submit"
                                 disabled={isPending || !formData.agreed}
@@ -547,7 +644,17 @@ export default function RegisterPage() {
                              >
                                 <div className="absolute inset-0 bg-white/40 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
                                 {isPending ? <Loader2 className="animate-spin" /> : <Rocket size={20} />}
-                                <span>KHỞI TẠO TÀI KHOẢN</span>
+                                <span>GỬI OTP QUA EMAIL</span>
+                             </button>
+                          ) : (
+                             <button 
+                                type="submit"
+                                disabled={isPending || otpCode.length !== 6}
+                                className="flex-1 py-4 bg-[#00ff88] text-black font-bold rounded-xl hover:bg-[#00cc6a] transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(0,255,136,0.3)] disabled:opacity-50 disabled:shadow-none group relative overflow-hidden"
+                             >
+                                <div className="absolute inset-0 bg-white/40 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
+                                {isPending ? <Loader2 className="animate-spin" /> : <ShieldCheck size={20} />}
+                                <span>XÁC THỰC OTP</span>
                              </button>
                           )}
                        </div>
@@ -576,6 +683,7 @@ export default function RegisterPage() {
                     {currentStep === 1 && <Scan size={64} strokeWidth={1} />}
                     {currentStep === 2 && <Lock size={64} strokeWidth={1} />}
                     {currentStep === 3 && <ShieldCheck size={64} strokeWidth={1} />}
+                    {currentStep === 4 && <Fingerprint size={64} strokeWidth={1} />}
                  </div>
                  <h3 className="text-2xl font-bold text-white tracking-widest uppercase">{STEPS[currentStep-1].title} MODULE</h3>
                  <p className="text-gray-500 font-mono text-sm mt-2">{STEPS[currentStep-1].desc}</p>

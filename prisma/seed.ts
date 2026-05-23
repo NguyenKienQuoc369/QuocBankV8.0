@@ -1,4 +1,6 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import crypto from 'node:crypto';
 
 const prisma = new PrismaClient();
 
@@ -139,6 +141,46 @@ async function main() {
   }
 
   console.log('✅ Deposit locations (planets) seeded');
+
+  const existingAdmin = await prisma.adminUser.findFirst();
+  if (!existingAdmin) {
+    const employeeId = `EMP-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
+    const passwordPlain = crypto.randomBytes(12).toString('base64url');
+    const passwordHash = await bcrypt.hash(passwordPlain, 12);
+    const otplib = require('otplib') as { generateSecret?: () => string };
+    if (!otplib.generateSecret) {
+      throw new Error('OTP generator unavailable');
+    }
+    const otpSecret = otplib.generateSecret();
+
+    await prisma.adminUser.create({
+      data: {
+        employeeId,
+        passwordHash,
+        otpSecret,
+        isLocked: false,
+        failedAttempts: 0,
+      },
+    });
+
+    console.log('✅ AdminUser seeded');
+    console.log('🔐 Admin Credentials (store securely):');
+    console.log(`   employeeId: ${employeeId}`);
+    console.log(`   password:   ${passwordPlain}`);
+    console.log(`   otpSecret:  ${otpSecret}`);
+    const issuer = 'QuocBank Admin';
+    const label = encodeURIComponent(`${issuer}:${employeeId}`);
+    const params = new URLSearchParams({
+      secret: otpSecret,
+      issuer,
+      algorithm: 'SHA1',
+      digits: '6',
+      period: '30',
+    });
+    console.log('   TOTP URI:   ' + `otpauth://totp/${label}?${params.toString()}`);
+  } else {
+    console.log('ℹ️ AdminUser already exists, skipping admin seed');
+  }
 
   console.log('🎉 Seeding completed!');
 }

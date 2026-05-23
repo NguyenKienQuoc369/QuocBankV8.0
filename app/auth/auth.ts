@@ -9,8 +9,10 @@ export async function register(formData: FormData) {
   const username = formData.get('username') as string
   const password = formData.get('password') as string
   const fullName = formData.get('fullName') as string
+  const email = formData.get('email') as string
+  const phone = formData.get('phone') as string
 
-  if (!username || !password || !fullName) {
+  if (!username || !password || !fullName || !email || !phone) {
     return { error: 'Vui lòng điền đầy đủ thông tin' }
   }
 
@@ -33,6 +35,8 @@ export async function register(formData: FormData) {
           username,
           password: hashedPassword, // ĐÃ SỬA: Dùng 'password' khớp với schema
           fullName,
+          email,
+          phone,
           // avatarUrl: ... // ĐÃ BỎ
         }
       })

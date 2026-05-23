@@ -8,6 +8,27 @@ function getIp(req: NextRequest): string | undefined {
   )
 }
 
+function isIpAllowed(ip: string | undefined): boolean {
+  if (!ip) return false
+  const raw = process.env.ALLOWED_INTERNAL_IPS || ''
+  const list = raw
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+
+  if (list.length === 0) {
+    return process.env.NODE_ENV !== 'production'
+  }
+
+  return list.includes(ip) || ip === '127.0.0.1' || ip === '::1'
+}
+
+function isVietnamRequest(req: NextRequest): boolean {
+  const country = (req as any).geo?.country || req.headers.get('x-vercel-ip-country')
+  if (!country) return true
+  return country === 'VN'
+}
+
 async function sha256Base64Url(input: string): Promise<string> {
   const data = new TextEncoder().encode(input)
   const digest = await crypto.subtle.digest('SHA-256', data)
@@ -26,14 +47,17 @@ function buildCsp(): string {
   const frameSrc = process.env.CSP_FRAME_SRC || "'none'"
   const styleSrc = process.env.CSP_STYLE_SRC || "'self' 'unsafe-inline'"
   const scriptSrc = process.env.CSP_SCRIPT_SRC || "'self' 'unsafe-inline' 'unsafe-eval'"
+  const turnstileSrc = 'https://challenges.cloudflare.com'
+  const finalScriptSrc = scriptSrc.includes(turnstileSrc) ? scriptSrc : `${scriptSrc} ${turnstileSrc}`
+  const finalFrameSrc = frameSrc.includes(turnstileSrc) ? frameSrc : `${frameSrc} ${turnstileSrc}`
 
   return [
     "default-src 'self'",
     `connect-src ${connectSrc}`,
     `img-src ${imgSrc}`,
-    `frame-src ${frameSrc}`,
+    `frame-src ${finalFrameSrc}`,
     `style-src ${styleSrc}`,
-    `script-src ${scriptSrc}`,
+    `script-src ${finalScriptSrc}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -52,6 +76,13 @@ export async function middleware(req: NextRequest) {
 
   const requestId = crypto.randomUUID()
   const pathname = req.nextUrl.pathname
+
+  const isAdminRoute = pathname.startsWith('/admin')
+  if (isAdminRoute) {
+    if (!isIpAllowed(ip) || !isVietnamRequest(req)) {
+      return new NextResponse('Forbidden', { status: 403 })
+    }
+  }
 
   const fpCookieName = process.env.NODE_ENV === 'production' ? '__Host-qb_df' : 'qb_df'
   const existingFp = req.cookies.get(fpCookieName)?.value || req.cookies.get('__Host-qb_df')?.value || req.cookies.get('qb_df')?.value

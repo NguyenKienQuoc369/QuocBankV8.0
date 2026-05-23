@@ -18,6 +18,8 @@ const RegisterSchema = z.object({
   fullName: z.string().min(2, 'Họ tên phải có ít nhất 2 ký tự').trim(),
   username: z.string().min(4, 'Tên đăng nhập tối thiểu 4 ký tự')
     .regex(/^[a-zA-Z0-9_]+$/, 'Tên đăng nhập không được chứa ký tự đặc biệt'),
+  email: z.string().email('Email không hợp lệ'),
+  phone: z.string().min(8, 'Số điện thoại không hợp lệ'),
   // CẬP NHẬT: Mật khẩu tối thiểu 8 ký tự theo yêu cầu
   password: z.string().min(8, 'Mật khẩu phải có ít nhất 8 ký tự'), 
   confirmPassword: z.string()
@@ -41,7 +43,7 @@ export async function register(prevState: any, formData: FormData) {
       };
     }
 
-    const { username, password, fullName } = validated.data;
+    const { username, password, fullName, email, phone } = validated.data;
 
     // Kiểm tra tên đăng nhập đã tồn tại chưa
     const existingUser = await prisma.user.findUnique({
@@ -74,6 +76,8 @@ export async function register(prevState: any, formData: FormData) {
           username,
           password: hashedPassword,
           fullName,
+          email,
+          phone,
         }
       });
 

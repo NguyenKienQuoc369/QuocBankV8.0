@@ -1,28 +1,20 @@
 // app/login/page.tsx
 'use client'
 
-import React, { useState, useActionState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useSpring, useMotionValue, useTransform } from 'framer-motion'
-import { login, loginWithPin } from '@/app/actions/auth'
 import { CosmicLogo } from '@/components/ui/CosmicLogo'
-import { PinVerification } from '@/components/security/PinVerification'
+import PhoneInput from 'react-phone-number-input'
+import 'react-phone-number-input/style.css'
 import { 
-  LogIn, Key, User, Loader2, ShieldCheck, 
+  LogIn, Key, User, Mail, Loader2, ShieldCheck, 
   Cpu, Zap, Globe, ScanFace, Lock, AlertTriangle, 
   Terminal, Activity, CheckCircle, ChevronLeft, Eye, EyeOff
 } from 'lucide-react'
 
 // --- 1. CONFIG & UTILS ---
-const initialState: any = {
-  message: '',
-  error: '',
-  success: false,
-  requiresPin: false,
-  userId: null,
-  accountId: null
-}
 
 // Hàm random số cho hiệu ứng Matrix
 const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1) + min)
@@ -285,12 +277,19 @@ const CyberInput = ({ icon: Icon, type, name, placeholder, onFocus, onBlur, isFo
 // --- 3. MAIN PAGE COMPONENT ---
 
 export default function LoginPage() {
-  const [state, formAction, isPending] = useActionState(login, initialState)
+  const [isPending, setIsPending] = useState(false)
+  const [authStep, setAuthStep] = useState<'form' | 'otp'>('form')
+  const [error, setError] = useState('')
+  const [otpCode, setOtpCode] = useState('')
+  const [formValues, setFormValues] = useState({
+    username: '',
+    password: '',
+    email: '',
+    phone: '',
+  })
   const [focusedField, setFocusedField] = useState<string | null>(null)
   const [isBooting, setIsBooting] = useState(true) // State khởi động
   const router = useRouter()
-  const [showPinVerification, setShowPinVerification] = useState(false)
-  const [pinData, setPinData] = useState<{ userId: string; accountId: string } | null>(null)
 
   // Parallax Effect Logic - Optimized với throttle
   const mouseX = useMotionValue(0)
@@ -312,31 +311,41 @@ export default function LoginPage() {
     return () => clearTimeout(timer)
   }, [])
 
-  // Xử lý login thành công hoặc cần PIN
-  useEffect(() => {
-    if (state?.success) {
-      router.refresh()
-      router.push('/dashboard') 
-    } else if (state?.requiresPin && state?.userId && state?.accountId) {
-      // Nếu cần PIN verification
-      setPinData({ userId: state.userId, accountId: state.accountId })
-      setShowPinVerification(true)
-    }
-  }, [state?.success, state?.requiresPin, state?.userId, state?.accountId, router])
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setIsPending(true)
 
-  const handlePinVerified = async () => {
-    if (!pinData) return
-    setShowPinVerification(false)
-    const result = await loginWithPin(pinData.userId, pinData.accountId)
-    if (result.success) {
-      router.refresh()
-      router.push('/dashboard')
+    try {
+      if (authStep === 'form') {
+        const res = await fetch('/api/auth/otp/start', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(formValues),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok || !data?.ok) {
+          setError(data?.error || 'Không thể gửi OTP')
+        } else {
+          setAuthStep('otp')
+        }
+      } else {
+        const res = await fetch('/api/auth/otp/verify', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ username: formValues.username, otpCode }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok || !data?.ok) {
+          setError(data?.error || 'OTP không hợp lệ')
+        } else {
+          router.refresh()
+          router.push('/dashboard')
+        }
+      }
+    } finally {
+      setIsPending(false)
     }
-  }
-
-  const handlePinCancelled = () => {
-    setShowPinVerification(false)
-    setPinData(null)
   }
 
   return (
@@ -344,17 +353,6 @@ export default function LoginPage() {
       className="min-h-screen w-full bg-black text-white flex items-center justify-center relative overflow-hidden font-sans selection:bg-cyan-500 selection:text-black perspective-1000"
       onMouseMove={handleMouseMove}
     >
-      {/* PIN VERIFICATION MODAL */}
-      {showPinVerification && pinData && (
-        <PinVerification
-          accountId={pinData.accountId}
-          onVerified={handlePinVerified}
-          onCancel={handlePinCancelled}
-          title="Xác thực đăng nhập"
-          description="Nhập mã PIN 6 số để hoàn tất quá trình đăng nhập"
-        />
-      )}
-
       {/* --- BACKGROUND LAYERS --- */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/20 via-black to-black z-0" />
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-15 mix-blend-overlay z-0" />
@@ -452,27 +450,70 @@ export default function LoginPage() {
               </div>
             ) : (
               // Form chính thức
-              <form action={formAction} className="space-y-6">
-                
-                <CyberInput 
-                  name="username" 
-                  type="text" 
-                  placeholder="Commander ID" 
-                  icon={User}
-                  isFocused={focusedField === 'username'}
-                  onFocus={() => setFocusedField('username')}
-                  onBlur={() => setFocusedField(null)}
-                />
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {authStep === 'form' ? (
+                  <>
+                    <CyberInput 
+                      name="username" 
+                      type="text" 
+                      placeholder="Commander ID" 
+                      icon={User}
+                      isFocused={focusedField === 'username'}
+                      onFocus={() => setFocusedField('username')}
+                      onBlur={() => setFocusedField(null)}
+                      onChange={(e: any) => setFormValues({ ...formValues, username: e.target.value })}
+                    />
 
-                <CyberInput 
-                  name="password" 
-                  type="password" 
-                  placeholder="••••••••••••" 
-                  icon={Key}
-                  isFocused={focusedField === 'password'}
-                  onFocus={() => setFocusedField('password')}
-                  onBlur={() => setFocusedField(null)}
-                />
+                    <CyberInput 
+                      name="password" 
+                      type="password" 
+                      placeholder="••••••••••••" 
+                      icon={Key}
+                      isFocused={focusedField === 'password'}
+                      onFocus={() => setFocusedField('password')}
+                      onBlur={() => setFocusedField(null)}
+                      onChange={(e: any) => setFormValues({ ...formValues, password: e.target.value })}
+                    />
+
+                    <CyberInput 
+                      name="email" 
+                      type="email" 
+                      placeholder="you@example.com" 
+                      icon={Mail}
+                      isFocused={focusedField === 'email'}
+                      onFocus={() => setFocusedField('email')}
+                      onBlur={() => setFocusedField(null)}
+                      onChange={(e: any) => setFormValues({ ...formValues, email: e.target.value })}
+                    />
+
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-gray-500 px-1">SỐ ĐIỆN THOẠI</div>
+                      <PhoneInput
+                        international
+                        defaultCountry="VN"
+                        value={formValues.phone}
+                        onChange={(value) => setFormValues({ ...formValues, phone: value || '' })}
+                        className="w-full rounded-xl border-2 border-white/10 bg-black/40 px-4 py-3 text-white focus:border-cyan-500/50"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-4 text-xs text-cyan-100">
+                      Nhằm tối ưu hóa chi phí vận hành trong giai đoạn nghiệm thu, hệ thống tạm thời không gửi OTP qua tin nhắn SMS. Mã xác thực đã được chuyển hướng an toàn về Email đăng ký của quý khách.
+                    </div>
+                    <CyberInput 
+                      name="otp" 
+                      type="text" 
+                      placeholder="Nhập 6 số OTP" 
+                      icon={ShieldCheck}
+                      isFocused={focusedField === 'otp'}
+                      onFocus={() => setFocusedField('otp')}
+                      onBlur={() => setFocusedField(null)}
+                      onChange={(e: any) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    />
+                  </>
+                )}
 
                 <div className="flex justify-between items-center text-xs text-gray-500">
                    <label className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors">
@@ -484,7 +525,7 @@ export default function LoginPage() {
 
                 {/* Error Message Area */}
                 <AnimatePresence>
-                  {state?.error && (
+                  {error && (
                     <motion.div 
                       initial={{ opacity: 0, height: 0, y: -10 }}
                       animate={{ opacity: 1, height: 'auto', y: 0 }}
@@ -492,7 +533,7 @@ export default function LoginPage() {
                       className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-center gap-3 overflow-hidden"
                     >
                       <AlertTriangle size={18} className="text-red-500 shrink-0" />
-                      <span className="text-sm text-red-400">{state.error}</span>
+                      <span className="text-sm text-red-400">{error}</span>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -501,27 +542,26 @@ export default function LoginPage() {
                 <motion.button 
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  disabled={isPending || state?.success}
+                  disabled={isPending}
                   className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-3 relative overflow-hidden group transition-all duration-300
-                    ${isPending || state?.success 
+                    ${isPending 
                       ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700' 
                       : 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white hover:shadow-[0_0_30px_rgba(6,182,212,0.4)] border border-white/10'
                     }
                   `}
                 >
                   {/* Hiệu ứng quét sáng qua nút */}
-                  {!isPending && !state?.success && (
+                  {!isPending && (
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                   )}
-
-                  {isPending || state?.success ? (
+                  {isPending ? (
                     <>
-                      {state?.success ? <CheckCircle className="text-green-500" /> : <ScanFace className="animate-pulse" />}
-                      <span className="font-mono">{state?.success ? 'ACCESS GRANTED' : 'VERIFYING BIOMETRICS...'}</span>
+                      <ScanFace className="animate-pulse" />
+                      <span className="font-mono">VERIFYING...</span>
                     </>
                   ) : (
                     <>
-                      <LogIn size={20} /> TRUY CẬP HỆ THỐNG
+                      <LogIn size={20} /> {authStep === 'form' ? 'GỬI OTP QUA EMAIL' : 'XÁC THỰC OTP'}
                     </>
                   )}
                 </motion.button>

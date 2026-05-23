@@ -34,6 +34,10 @@ yarn-error.log*
 .env*
 !.env.example
 
+# local dev artifacts
+.next-dev.log
+.vscode/
+
 # vercel
 .vercel
 
