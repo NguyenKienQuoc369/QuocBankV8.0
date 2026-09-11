@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import SecurityAuditPanel from '@/components/security/SecurityAuditPanel'
-import { resetAccountPinAction, setAccountLockAction, updateAccountLimitsAction } from './actions'
+import { deleteUserAction, resetAccountPinAction, setAccountLockAction, updateAccountLimitsAction } from './actions'
 
 export default async function AdminConsolePage() {
   const [users, accounts, transactions, logs] = await Promise.all([
@@ -76,6 +76,7 @@ export default async function AdminConsolePage() {
                 <th className="py-2 pr-4">Full name</th>
                 <th className="py-2 pr-4">User ID</th>
                 <th className="py-2 pr-4">Created</th>
+                <th className="py-2 pr-4">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -85,6 +86,22 @@ export default async function AdminConsolePage() {
                   <td className="py-2 pr-4">{u.fullName}</td>
                   <td className="py-2 pr-4 font-mono text-xs">{u.id}</td>
                   <td className="whitespace-nowrap py-2 pr-4">{new Date(u.createdAt).toLocaleString('vi-VN')}</td>
+                  <td className="py-2 pr-4">
+                    <form action={deleteUserAction} className="flex min-w-[220px] flex-col gap-2">
+                      <input type="hidden" name="userId" value={u.id} />
+                      <input
+                        name="confirm"
+                        placeholder="Type DELETE to confirm"
+                        required
+                        pattern="DELETE"
+                        title="Type DELETE to confirm"
+                        className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-gray-100"
+                      />
+                      <button className="rounded-xl border border-red-500/30 bg-red-600/20 px-3 py-2 text-xs font-bold text-red-200 hover:bg-red-600/30">
+                        Delete user
+                      </button>
+                    </form>
+                  </td>
                 </tr>
               ))}
             </tbody>

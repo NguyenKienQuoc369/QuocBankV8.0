@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-// 1. Import Component
-import ClientSpark from '@/components/ui/ClientSpark'
+import ClientSpark from "@/components/ui/ClientSpark";
 
-// Prevent build-time prerendering for the entire app (avoid client-hook execution during static export)
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,6 +18,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "QuocBank - Ngân Hàng Lượng Tử",
   description: "Trải nghiệm tài chính không gian",
+  other: {
+    "adq-verification": "adq-verify-La47Wvbi3_zsKspqhMm1-R4ZaRGXihsk",
+  },
 };
 
 export default function RootLayout({
@@ -32,7 +33,6 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* 2. Đặt component ở đây để nó nằm trên cùng mọi layer (client-only) */}
         <ClientSpark />
         {children}
       </body>

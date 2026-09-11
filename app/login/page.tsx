@@ -321,7 +321,11 @@ export default function LoginPage() {
         const res = await fetch('/api/auth/otp/start', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(formValues),
+          body: JSON.stringify({
+            username: formValues.username,
+            password: formValues.password,
+            mode: 'login',
+          }),
         })
         const data = await res.json().catch(() => ({}))
         if (!res.ok || !data?.ok) {

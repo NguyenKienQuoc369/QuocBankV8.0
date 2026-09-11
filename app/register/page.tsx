@@ -362,6 +362,7 @@ export default function RegisterPage() {
                email: formData.email,
                phone: formData.phone,
                fullName: formData.fullName,
+               mode: 'register',
             }),
          })
          const data = await res.json().catch(() => ({}))

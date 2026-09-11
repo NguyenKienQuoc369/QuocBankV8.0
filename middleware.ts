@@ -76,10 +76,12 @@ export async function middleware(req: NextRequest) {
 
   const requestId = crypto.randomUUID()
   const pathname = req.nextUrl.pathname
+  const host = req.nextUrl.hostname
+  const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '::1'
 
   const isAdminRoute = pathname.startsWith('/admin')
   if (isAdminRoute) {
-    if (!isIpAllowed(ip) || !isVietnamRequest(req)) {
+    if (!isLocalhost && (!isIpAllowed(ip) || !isVietnamRequest(req))) {
       return new NextResponse('Forbidden', { status: 403 })
     }
   }
