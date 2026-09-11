@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   title: "QuocBank - Ngân Hàng Lượng Tử",
   description: "Trải nghiệm tài chính không gian",
   other: {
-    "adq-verification": "adq-verify-La47Wvbi3_zsKspqhMm1-R4ZaRGXihsk",
+    "adq-verification": "adq-verify-hRuaneF9e2m_ZVxiz5TqNfNXQkD4FPwg",
   },
 };
 
